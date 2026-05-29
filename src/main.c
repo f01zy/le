@@ -1,19 +1,20 @@
+#include <stddef.h>
 #include <stdio.h>
 #include <unistd.h>
 
 #include "defines.h"
 #include "service.h"
+#include "types.h"
 
 struct Context ctx;
 
-// TODO: cant choose last symbol in curr line
 void handle_normal_mode(struct Context *ctx, int ch) {
   if (ch == 'h') {
     if (ctx->x == 0 && ctx->y == 0) return;
     if (ctx->x == 0) {
       ctx->y--;
       struct Line *line = ctx->buf[ctx->y];
-      ctx->x            = line->len - 1;
+      ctx->x            = line->len;
     } else {
       ctx->x--;
     }
@@ -21,8 +22,8 @@ void handle_normal_mode(struct Context *ctx, int ch) {
 
   else if (ch == 'l') {
     struct Line *line = ctx->buf[ctx->y];
-    if (ctx->x == line->len - 1 && ctx->y == ctx->len - 1) return;
-    if (ctx->x == line->len - 1) {
+    if (ctx->x == line->len && ctx->y == ctx->len - 1) return;
+    if (ctx->x == line->len) {
       ctx->x = 0;
       ctx->y++;
     } else {
@@ -30,14 +31,18 @@ void handle_normal_mode(struct Context *ctx, int ch) {
     }
   }
 
-  else if (ch == 'k') {
+  else if (ch == 'j') {
     if (ctx->y == ctx->len - 1) return;
     ctx->y++;
+    struct Line *line = ctx->buf[ctx->y];
+    ctx->x            = MIN(ctx->x, line->len);
   }
 
-  else if (ch == 'j') {
+  else if (ch == 'k') {
     if (ctx->y == 0) return;
     ctx->y--;
+    struct Line *line = ctx->buf[ctx->y];
+    ctx->x            = MIN(ctx->x, line->len);
   }
 
   else if (ch == 'i') {
@@ -53,18 +58,31 @@ void handle_insert_mode(struct Context *ctx, int ch) {
   }
 
   if (ch == KEY_ENTER) {
-    line_break(ctx, ctx->y);
-  } else if (ch == KEY_BACKSPACE) {
-    remove_curr(ctx);
-  } else if (ch >= 32 && ch <= 126) {
-    write_to_line(ctx, ctx->y, ctx->x, ch);
-    ctx->x++;
+    line_break(ctx);
+    render_line(ctx, ctx->y);
+    render_line(ctx, ctx->y + 1);
+    ctx->y++;
+    ctx->x = 0;
   }
 
-  move_cursor_yx(ctx->y, 0);
-  ANSI_RESET_LINE;
-  struct Line *line = ctx->buf[ctx->y];
-  write(STDOUT_FILENO, line->buf, line->len);
+  else if (ch == KEY_BACKSPACE) {
+    enum RemoveResult res = remove_from_line(ctx, ctx->y, ctx->x);
+    if (res == REMOVE_CHAR) {
+      ctx->x--;
+      render_line(ctx, ctx->y);
+    } else if (res == REMOVE_LINE) {
+      render_line(ctx, ctx->y - 1);
+      render_line(ctx, ctx->y);
+      ctx->x = ctx->buf[ctx->y - 1]->len;
+      ctx->y--;
+    }
+  }
+
+  else if (ch >= 32 && ch <= 126) {
+    write_to_line(ctx, ctx->y, ctx->x, ch);
+    ctx->x++;
+    render_line(ctx, ctx->y);
+  }
   move_cursor_yx(ctx->y, ctx->x);
 }
 

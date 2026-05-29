@@ -6,6 +6,7 @@
 #include <termios.h>
 
 enum Mode { MODE_NORMAL, MODE_INSERT };
+enum RemoveResult { REMOVE_NOTHING, REMOVE_CHAR, REMOVE_LINE };
 
 struct Line {
   char *buf;

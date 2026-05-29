@@ -67,22 +67,34 @@ void write_to_line(struct Context *ctx, int y, int x, char ch) {
   line->buf[line->len] = '\0';
 }
 
-void remove_curr(struct Context *ctx) {
-  struct Line *line = ctx->buf[ctx->y];
-  if (ctx->x == 0) {
-    if (ctx->y == 0) return;
-    remove_line(ctx, ctx->y);
-    struct Line *line = ctx->buf[ctx->y - 1];
-    ctx->x            = line->len;
-    ctx->y--;
-    return;
+enum RemoveResult remove_from_line(struct Context *ctx, int y, int x) {
+  struct Line *line = ctx->buf[y];
+  if (x == 0) {
+    if (y == 0) return REMOVE_NOTHING;
+    remove_line(ctx, y);
+    return REMOVE_LINE;
   }
   line->len--;
-  for (int i = ctx->x - 1; i < line->len; i++) {
+  for (int i = x - 1; i < line->len; i++) {
     line->buf[i] = line->buf[i + 1];
   }
   line->buf[line->len] = '\0';
-  ctx->x--;
+  return REMOVE_CHAR;
 }
 
-void line_break(struct Context *ctx, int y) {}
+void line_break(struct Context *ctx) {
+  add_line(ctx, ctx->y + 1);
+  struct Line *line = ctx->buf[ctx->y];
+  struct Line *next = ctx->buf[ctx->y + 1];
+  for (int i = ctx->x; i < line->len; i++) {
+    write_to_line(ctx, ctx->y + 1, next->len, line->buf[i]);
+    remove_from_line(ctx, ctx->y, i);
+  }
+}
+
+void render_line(struct Context *ctx, int y) {
+  move_cursor_yx(y, 0);
+  ANSI_RESET_LINE;
+  struct Line *line = ctx->buf[y];
+  write(STDOUT_FILENO, line->buf, line->len);
+}

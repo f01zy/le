@@ -13,5 +13,6 @@
 #define ANSI_RESET_SCREEN      write(STDOUT_FILENO, "\x1b[2J", 4);
 #define ANSI_RESET_LINE        write(STDOUT_FILENO, "\x1b[2K", 4);
 #define ANSI_MOVE_CURSOR_YX    "\x1b[%d;%dH"
+#define MIN(A, B)              ((A) > (B) ? (B) : (A))
 
 #endif
