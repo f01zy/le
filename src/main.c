@@ -3,27 +3,29 @@
 #include <unistd.h>
 
 #include "defines.h"
+#include "render.h"
 #include "service.h"
 #include "types.h"
 
 struct Context ctx;
 
 void handle_normal_mode(struct Context *ctx, int ch) {
+  struct Line *line = ctx->buf[ctx->y];
+  size_t len        = line->len ? line->len - 1 : 0;
+
   if (ch == 'h') {
     if (ctx->x == 0 && ctx->y == 0) return;
     if (ctx->x == 0) {
       ctx->y--;
-      struct Line *line = ctx->buf[ctx->y];
-      ctx->x            = line->len;
+      ctx->x = len;
     } else {
       ctx->x--;
     }
   }
 
   else if (ch == 'l') {
-    struct Line *line = ctx->buf[ctx->y];
-    if (ctx->x == line->len && ctx->y == ctx->len - 1) return;
-    if (ctx->x == line->len) {
+    if (ctx->x == len && ctx->y == ctx->len - 1) return;
+    if (ctx->x == len) {
       ctx->x = 0;
       ctx->y++;
     } else {
@@ -34,29 +36,24 @@ void handle_normal_mode(struct Context *ctx, int ch) {
   else if (ch == 'j') {
     if (ctx->y == ctx->len - 1) return;
     ctx->y++;
-    struct Line *line = ctx->buf[ctx->y];
-    ctx->x            = MIN(ctx->x, line->len);
+    ctx->x = MIN(ctx->x, ctx->buf[ctx->y]->len);
   }
 
   else if (ch == 'k') {
     if (ctx->y == 0) return;
     ctx->y--;
-    struct Line *line = ctx->buf[ctx->y];
-    ctx->x            = MIN(ctx->x, line->len);
+    ctx->x = MIN(ctx->x, ctx->buf[ctx->y]->len);
   }
 
-  else if (ch == 'i') {
-    ctx->mode = MODE_INSERT;
+  else if (ch == 'a' || ch == 'i') {
+    if (ch == 'a' && line->len > 0) ctx->x++;
+    change_mode(ctx, MODE_INSERT);
   }
+
   move_cursor_yx(ctx->y, ctx->x);
 }
 
 void handle_insert_mode(struct Context *ctx, int ch) {
-  if (ch == KEY_ESCAPE) {
-    ctx->mode = MODE_NORMAL;
-    return;
-  }
-
   if (ch == KEY_ENTER) {
     line_break(ctx);
     render_line(ctx, ctx->y);
@@ -66,6 +63,7 @@ void handle_insert_mode(struct Context *ctx, int ch) {
   }
 
   else if (ch == KEY_BACKSPACE) {
+    int temp              = ctx->y > 0 ? ctx->buf[ctx->y - 1]->len : -1;
     enum RemoveResult res = remove_from_line(ctx, ctx->y, ctx->x);
     if (res == REMOVE_CHAR) {
       ctx->x--;
@@ -73,7 +71,7 @@ void handle_insert_mode(struct Context *ctx, int ch) {
     } else if (res == REMOVE_LINE) {
       render_line(ctx, ctx->y - 1);
       render_line(ctx, ctx->y);
-      ctx->x = ctx->buf[ctx->y - 1]->len;
+      ctx->x = temp;
       ctx->y--;
     }
   }
@@ -83,12 +81,17 @@ void handle_insert_mode(struct Context *ctx, int ch) {
     ctx->x++;
     render_line(ctx, ctx->y);
   }
+
+  else if (ch == KEY_ESCAPE) {
+    if (ctx->x) ctx->x--;
+    change_mode(ctx, MODE_NORMAL);
+  }
+
   move_cursor_yx(ctx->y, ctx->x);
 }
 
 int main() {
   configure_context(&ctx);
-  move_cursor_yx(0, 0);
   ANSI_RESET_SCREEN;
 
   int ch;
@@ -98,6 +101,7 @@ int main() {
     } else if (ctx.mode == MODE_INSERT) {
       handle_insert_mode(&ctx, ch);
     }
+    render_statusline(&ctx);
   }
 
   tcsetattr(STDIN_FILENO, TCSANOW, &ctx.backup);

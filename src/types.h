@@ -5,8 +5,25 @@
 #include <sys/ioctl.h>
 #include <termios.h>
 
-enum Mode { MODE_NORMAL, MODE_INSERT };
-enum RemoveResult { REMOVE_NOTHING, REMOVE_CHAR, REMOVE_LINE };
+enum CursorStyle {
+  CURSOR_BLOCK_BLINKING     = 1,
+  CURSOR_BLOCK_STATIC       = 2,
+  CURSOR_UNDERLINE_BLINKING = 3,
+  CURSOR_UNDERLINE_STATIC   = 4,
+  CURSOR_LINE_BLINKING      = 5,
+  CURSOR_LINE_STATIC        = 6,
+};
+
+enum Mode {
+  MODE_NORMAL,
+  MODE_INSERT,
+};
+
+enum RemoveResult {
+  REMOVE_NOTHING,
+  REMOVE_CHAR,
+  REMOVE_LINE,
+};
 
 struct Line {
   char *buf;

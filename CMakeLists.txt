@@ -4,6 +4,7 @@ project(editor)
 set(SOURCE
   ./src/main.c
   ./src/service.c
+  ./src/render.c
 )
 
 add_executable(editor ${SOURCE})
