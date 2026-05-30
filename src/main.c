@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "defines.h"
@@ -45,6 +47,14 @@ void handle_normal_mode(struct Context *ctx, int ch) {
     ctx->x = MIN(ctx->x, ctx->buf[ctx->y]->len);
     break;
 
+  case '$':
+    ctx->x = len;
+    break;
+
+  case '0':
+    ctx->x = 0;
+    break;
+
   case 'i':
     change_mode(ctx, MODE_INSERT);
     break;
@@ -54,12 +64,8 @@ void handle_normal_mode(struct Context *ctx, int ch) {
     change_mode(ctx, MODE_INSERT);
     break;
 
-  case '$':
-    ctx->x = len;
-    break;
-
-  case '0':
-    ctx->x = 0;
+  case ':':
+    change_mode(ctx, MODE_COMMAND);
     break;
   }
 }
@@ -97,6 +103,36 @@ void handle_insert_mode(struct Context *ctx, int ch) {
   }
 }
 
+void handle_command(struct Context *ctx) {
+  if (strcmp(ctx->cmd->buf, "quit") == 0) { ctx->is_exit = true; }
+}
+
+void handle_command_mode(struct Context *ctx, char ch) {
+  switch (ch) {
+  case KEY_ESCAPE:
+    clear_cmd(ctx);
+    change_mode(ctx, MODE_NORMAL);
+    break;
+
+  case KEY_ENTER:
+    handle_command(ctx);
+    clear_cmd(ctx);
+    change_mode(ctx, MODE_NORMAL);
+    break;
+
+  case KEY_BACKSPACE:
+    if (ctx->cmd->len > 0) ctx->cmd->buf[--ctx->cmd->len] = '\0';
+    break;
+
+  default:
+    if (ch >= 32 && ch <= 126 && ctx->cmd->len < ctx->cmd->size - 1) {
+      ctx->cmd->buf[ctx->cmd->len++] = ch;
+      ctx->cmd->buf[ctx->cmd->len]   = '\0';
+    }
+    break;
+  }
+}
+
 int main() {
   ANSI_RESET_SCREEN;
   configure_context(&ctx);
@@ -104,16 +140,21 @@ int main() {
   render(&ctx);
 
   int ch;
-  while ((ch = getchar()) != KEY_TAB) {
+  while (!ctx.is_exit) {
+    ch = getchar();
     if (ctx.mode == MODE_NORMAL) {
       handle_normal_mode(&ctx, ch);
     } else if (ctx.mode == MODE_INSERT) {
       handle_insert_mode(&ctx, ch);
+    } else if (ctx.mode == MODE_COMMAND) {
+      handle_command_mode(&ctx, ch);
     }
     check_offset(&ctx);
     render(&ctx);
   }
 
-  tcsetattr(STDIN_FILENO, TCSANOW, &ctx.backup);
+  free_resources(&ctx);
+  ANSI_RESET_SCREEN;
+  tcsetattr(STDIN_FILENO, TCSAFLUSH, &ctx.backup);
   return 0;
 }

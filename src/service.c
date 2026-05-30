@@ -15,6 +15,11 @@ void configure_context(struct Context *ctx) {
       .is_line_number = true,
   };
 
+  struct Line *cmd   = (struct Line *)malloc(sizeof(struct Line));
+  cmd->size          = ctx->win.ws_col;
+  cmd->buf           = (char *)malloc(cmd->size);
+  cmd->buf[0]        = '\0';
+  ctx->cmd           = cmd;
   ctx->ui            = ui;
   ctx->conf          = ctx->backup;
   ctx->conf.c_iflag |= IXOFF;
@@ -28,6 +33,11 @@ void configure_context(struct Context *ctx) {
   tcsetattr(STDIN_FILENO, TCSANOW, &ctx->conf);
 }
 
+void clear_cmd(struct Context *ctx) {
+  ctx->cmd->buf[0] = '\0';
+  ctx->cmd->len    = 0;
+}
+
 int get_line_number_margin(struct Context *ctx) {
   if (!ctx->ui.is_line_number) return 0;
   int len = ctx->len, margin = 0;
@@ -39,6 +49,21 @@ int get_line_number_margin(struct Context *ctx) {
 }
 
 size_t get_max_x(struct Line *line) { return line->len ? line->len - 1 : 0; }
+
+void free_resources(struct Context *ctx) {
+  for (int i = 0; i < ctx->len; i++) {
+    struct Line *line = ctx->buf[i];
+    free(line->buf);
+    free(line);
+  }
+  for (int i = 0; i < ctx->win.ws_row; i++) {
+    free(ctx->prev_frame[i]);
+  }
+  free(ctx->buf);
+  free(ctx->prev_frame);
+  free(ctx->cmd->buf);
+  free(ctx->cmd);
+}
 
 void check_offset(struct Context *ctx) {
   int margin = get_line_number_margin(ctx);

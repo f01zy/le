@@ -27,7 +27,7 @@ enum CursorStyle {
   CURSOR_LINE_STATIC,
 };
 
-enum Mode { MODE_NORMAL, MODE_INSERT };
+enum Mode { MODE_NORMAL, MODE_INSERT, MODE_COMMAND };
 enum RemoveResult { REMOVE_NOTHING, REMOVE_CHAR, REMOVE_LINE };
 
 struct UI {
@@ -50,6 +50,7 @@ struct Context {
   int offsetX, offsetY;
   struct Cell **prev_frame;
   struct Line **buf;
+  struct Line *cmd;
   size_t len;
   size_t size;
   struct termios conf;
@@ -57,6 +58,7 @@ struct Context {
   struct winsize win;
   struct UI ui;
   enum Mode mode;
+  bool is_exit;
 };
 
 #endif
