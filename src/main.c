@@ -20,17 +20,16 @@ int main(int argc, char **argv) {
 
   int ch;
   while (!ctx.is_exit) {
-    struct Document *doc = ctx.docs[ctx.curr_doc];
-
     ch = getchar();
-    if (ctx.mode == MODE_NORMAL) {
-      handle_normal_mode(&ctx, doc, ch);
-    } else if (ctx.mode == MODE_INSERT) {
-      handle_insert_mode(&ctx, doc, ch);
+    if (ctx.mode == MODE_INSERT) {
+      handle_insert_mode(&ctx, ch);
     } else if (ctx.mode == MODE_COMMAND) {
-      handle_command_mode(&ctx, doc, ch);
+      handle_command_mode(&ctx, ch);
+    } else if (ctx.mode == MODE_NORMAL) {
+      handle_normal_mode(&ctx, ch);
     }
 
+    struct Document *doc = ctx.docs[ctx.curr_doc];
     check_offset(&ctx, doc);
     render(&ctx);
     clear_status(&ctx);

@@ -1,12 +1,10 @@
 #ifndef HANDLERS_INCLUDED
 #define HANDLERS_INCLUDED
 
-#include "filesystem.h"
-#include "render.h"
+#include "editor_commands.h"
 
-void handle_command_mode(struct Context *ctx, struct Document *doc, char ch);
-void handle_command(struct Context *ctx, struct Document *doc);
-void handle_insert_mode(struct Context *ctx, struct Document *doc, int ch);
-void handle_normal_mode(struct Context *ctx, struct Document *doc, int ch);
+void handle_command_mode(struct Context *ctx, char ch);
+void handle_insert_mode(struct Context *ctx, int ch);
+void handle_normal_mode(struct Context *ctx, int ch);
 
 #endif

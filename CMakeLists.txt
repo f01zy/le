@@ -11,6 +11,7 @@ set(SOURCE
   ./src/filesystem.c
   ./src/ui.c
   ./src/handlers.c
+  ./src/editor_commands.c
 )
 
 add_executable(editor ${SOURCE})

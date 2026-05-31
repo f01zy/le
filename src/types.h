@@ -90,6 +90,8 @@ struct Document {
 struct Context {
   bool is_exit;
   size_t len, size, curr_doc;
+  float last_frame;
+  char *shortcut;
   struct Document **docs;
   struct Cell **prev_frame;
   struct Cell **curr_frame;

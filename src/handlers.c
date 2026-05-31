@@ -3,11 +3,11 @@
 #include <string.h>
 
 #include "handlers.h"
-#include "types.h"
 
-void handle_normal_mode(struct Context *ctx, struct Document *doc, int ch) {
+void handle_normal_mode(struct Context *ctx, int ch) {
+  struct Document *doc = ctx->docs[ctx->curr_doc];
   struct Line *line = doc->buf[doc->y];
-  size_t len        = get_max_x(line);
+  size_t len = get_max_x(line);
 
   switch (ch) {
   case 'h':
@@ -65,7 +65,8 @@ void handle_normal_mode(struct Context *ctx, struct Document *doc, int ch) {
   }
 }
 
-void handle_insert_mode(struct Context *ctx, struct Document *doc, int ch) {
+void handle_insert_mode(struct Context *ctx, int ch) {
+  struct Document *doc = ctx->docs[ctx->curr_doc];
   switch (ch) {
   case KEY_ENTER:
     line_break(doc);
@@ -74,7 +75,7 @@ void handle_insert_mode(struct Context *ctx, struct Document *doc, int ch) {
     break;
 
   case KEY_BACKSPACE:;
-    int temp              = doc->y > 0 ? doc->buf[doc->y - 1]->len : 0;
+    int temp = doc->y > 0 ? doc->buf[doc->y - 1]->len : 0;
     enum RemoveResult res = remove_from_line(doc, doc->y, doc->x);
     if (res == REMOVE_CHAR) {
       doc->x--;
@@ -98,58 +99,7 @@ void handle_insert_mode(struct Context *ctx, struct Document *doc, int ch) {
   }
 }
 
-void handle_command(struct Context *ctx, struct Document *doc) {
-  if (!ctx->cmd && !ctx->cmd->len) return;
-  char *cmd = (char *)xmalloc(ctx->cmd->len + 1);
-  memcpy(cmd, ctx->cmd->buf, ctx->cmd->len);
-  cmd[ctx->cmd->len] = '\0';
-  char *token        = strtok(cmd, " ");
-
-  enum Command type = COMMAND_UNKNOWN;
-  if (!strcmp(token, "save")) type = COMMAND_SAVE;
-  if (!strcmp(token, "open")) type = COMMAND_OPEN;
-  if (!strcmp(token, "quit")) type = COMMAND_QUIT;
-
-  switch (type) {
-  case COMMAND_QUIT:
-    ctx->is_exit = true;
-    break;
-
-  case COMMAND_SAVE: {
-    int size = save_doc(doc);
-    if (size == -1) {
-      set_status(ctx, "Failed to save file", STATUS_ERROR);
-      free(cmd);
-      return;
-    }
-    char buf[MAX_BUFFER_SIZE];
-    snprintf(buf, sizeof(buf), "\"%s\", %dB written", doc->path, size);
-    set_status(ctx, buf, STATUS_INFO);
-    break;
-  }
-
-  case COMMAND_OPEN:
-    token          = strtok(NULL, " ");
-    bool is_opened = load_doc_data(doc, token);
-    if (!is_opened) {
-      set_status(ctx, "Failed to open file", STATUS_ERROR);
-      free(cmd);
-      return;
-    }
-    break;
-
-  default: {
-    char buf[MAX_BUFFER_SIZE];
-    int len = snprintf(buf, sizeof(buf), "Not an editor command: %s", cmd);
-    set_status(ctx, buf, STATUS_ERROR);
-    break;
-  }
-  }
-
-  free(cmd);
-}
-
-void handle_command_mode(struct Context *ctx, struct Document *doc, char ch) {
+void handle_command_mode(struct Context *ctx, char ch) {
   switch (ch) {
   case KEY_ESCAPE:
     clear_cmd(ctx);
@@ -157,7 +107,7 @@ void handle_command_mode(struct Context *ctx, struct Document *doc, char ch) {
     break;
 
   case KEY_ENTER:
-    handle_command(ctx, doc);
+    handle_command(ctx);
     clear_cmd(ctx);
     change_mode(ctx, MODE_NORMAL);
     break;
@@ -169,7 +119,7 @@ void handle_command_mode(struct Context *ctx, struct Document *doc, char ch) {
   default:
     if (ch >= 32 && ch <= 126 && ctx->cmd->len < ctx->cmd->size - 1) {
       ctx->cmd->buf[ctx->cmd->len++] = ch;
-      ctx->cmd->buf[ctx->cmd->len]   = '\0';
+      ctx->cmd->buf[ctx->cmd->len] = '\0';
     }
     break;
   }
