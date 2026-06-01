@@ -136,9 +136,9 @@ void render(struct Context *ctx) {
       }
     }
   }
-  for (int i = 0; i < ctx->win.ws_row; i++) {
-    memcpy(ctx->prev_frame[i], ctx->curr_frame[i], ctx->win.ws_col * sizeof(struct Cell));
-  }
+  struct Cell **temp = ctx->prev_frame;
+  ctx->prev_frame = ctx->curr_frame;
+  ctx->curr_frame = temp;
   if (ctx->mode == MODE_COMMAND) {
     move_cursor_yx(ctx->win.ws_row - 1, ctx->cmd->len + 1);
   } else {

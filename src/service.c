@@ -8,7 +8,7 @@ void init_editor(struct Context *ctx) {
   ANSI_RESET_SCREEN;
   ioctl(STDIN_FILENO, TIOCGWINSZ, &ctx->win);
   tcgetattr(STDIN_FILENO, &ctx->backup);
-  configure_context(ctx);
+  init_context(ctx);
   tcsetattr(STDIN_FILENO, TCSANOW, &ctx->conf);
   change_mode(ctx, MODE_NORMAL);
 }
@@ -20,7 +20,7 @@ void quit_editor(struct Context *ctx) {
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &ctx->backup);
 }
 
-void configure_context(struct Context *ctx) {
+void init_context(struct Context *ctx) {
   struct UI ui = {
       .is_line_numbers = true,
       .is_statusline = true,

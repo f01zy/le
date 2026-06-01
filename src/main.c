@@ -1,5 +1,7 @@
-#include "handlers.h"
 #include <stdio.h>
+
+#include "handlers.h"
+#include "mappings.h"
 
 struct Context ctx;
 
@@ -9,6 +11,7 @@ int main(int argc, char **argv) {
     return 1;
   }
   init_editor(&ctx);
+  init_mappings(&ctx);
   if (argc == 2) {
     struct Document *doc = create_doc(&ctx);
     load_doc_data(doc, argv[1]);

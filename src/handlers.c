@@ -8,60 +8,23 @@ void handle_normal_mode(struct Context *ctx, int ch) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
   struct Line *line = doc->buf[doc->y];
   size_t len = get_max_x(line);
-
-  switch (ch) {
-  case 'h':
-    if (!doc->x && !doc->y) break;
-    if (!doc->x) {
-      doc->x = get_max_x(doc->buf[doc->y - 1]);
-      doc->y--;
-    } else {
-      doc->x--;
+  clock_t now = clock();
+  clock_t delta = now - ctx->last_frame;
+  ctx->last_frame = now;
+  if (delta > 10000 || !ctx->map_curr->len) {
+    if (ctx->map_curr->act) ctx->map_curr->act(ctx);
+    ctx->map_curr = ctx->map_head;
+  } else {
+    bool is_found = false;
+    for (int i = 0; i < ctx->map_curr->len; i++) {
+      struct MappingNode *curr_node = ctx->map_curr->nodes[i];
+      if (curr_node->ch == ch) {
+        is_found = true;
+        ctx->map_curr = curr_node;
+        break;
+      }
     }
-    break;
-
-  case 'l':
-    if (doc->x == len && doc->y == doc->len - 1) break;
-    if (doc->x == len) {
-      doc->x = 0;
-      doc->y++;
-    } else {
-      doc->x++;
-    }
-    break;
-
-  case 'j':
-    if (doc->y == doc->len - 1) break;
-    doc->x = MIN(doc->x, get_max_x(doc->buf[doc->y + 1]));
-    doc->y++;
-    break;
-
-  case 'k':
-    if (!doc->y) break;
-    doc->x = MIN(doc->x, get_max_x(doc->buf[doc->y - 1]));
-    doc->y--;
-    break;
-
-  case '$':
-    doc->x = len;
-    break;
-
-  case '0':
-    doc->x = 0;
-    break;
-
-  case 'i':
-    change_mode(ctx, MODE_INSERT);
-    break;
-
-  case 'a':
-    if (line->len > 0) doc->x++;
-    change_mode(ctx, MODE_INSERT);
-    break;
-
-  case ':':
-    change_mode(ctx, MODE_COMMAND);
-    break;
+    if (!is_found) ctx->map_curr = ctx->map_head;
   }
 }
 

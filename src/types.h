@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <sys/ioctl.h>
 #include <termios.h>
+#include <time.h>
 
 enum CursorStyle {
   CURSOR_BLOCK_BLINKING = 1,
@@ -54,7 +55,6 @@ enum BackgroundColor {
 enum Mode { MODE_NORMAL, MODE_INSERT, MODE_COMMAND };
 enum RemoveResult { REMOVE_NOTHING, REMOVE_CHAR, REMOVE_LINE };
 enum StatusType { STATUS_INFO, STATUS_WARNING, STATUS_ERROR };
-enum Command { COMMAND_QUIT, COMMAND_SAVE, COMMAND_OPEN, COMMAND_UNKNOWN };
 
 struct UI {
   bool is_line_numbers;
@@ -90,8 +90,9 @@ struct Document {
 struct Context {
   bool is_exit;
   size_t len, size, curr_doc;
-  float last_frame;
-  char *shortcut;
+  clock_t last_frame;
+  struct MappingNode *map_head;
+  struct MappingNode *map_curr;
   struct Document **docs;
   struct Cell **prev_frame;
   struct Cell **curr_frame;
@@ -102,6 +103,23 @@ struct Context {
   struct winsize win;
   struct UI ui;
   enum Mode mode;
+};
+
+struct MappingNode {
+  int ch;
+  void (*act)(struct Context *ctx);
+  struct MappingNode **nodes;
+  size_t len;
+};
+
+struct Mapping {
+  char *cmd;
+  void (*act)(struct Context *ctx);
+};
+
+struct Command {
+  char *cmd;
+  void (*act)(struct Context *ctx, char *token);
 };
 
 #endif

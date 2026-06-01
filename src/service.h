@@ -8,7 +8,7 @@
 void set_status(struct Context *ctx, char *msg, enum StatusType type);
 void clear_status(struct Context *ctx);
 
-void configure_context(struct Context *ctx);
+void init_context(struct Context *ctx);
 void init_editor(struct Context *ctx);
 void quit_editor(struct Context *ctx);
 
