@@ -13,7 +13,10 @@ int main(int argc, char **argv) {
   init_editor(&ctx);
   init_mappings(&ctx);
   struct Document *doc = create_doc(&ctx);
-  if (argc == 2) load_doc_data(doc, argv[1]);
+  if (argc == 2) {
+    load_doc_data(doc, argv[1]);
+    init_highlightings(doc);
+  }
   render(&ctx);
 
   int ch;

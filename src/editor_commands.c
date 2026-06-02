@@ -4,7 +4,7 @@
 #include "editor_commands.h"
 #include "service.h"
 
-struct Command commands_list[] = {
+static struct Command commands_list[] = {
     {"open", command_open},
     {"quit", command_quit},
     {"save", command_save},

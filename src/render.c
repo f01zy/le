@@ -135,8 +135,11 @@ void render_buf(struct Context *ctx, struct Document *doc, struct Cell **frame) 
       struct TokenLine *line = doc->tokens.lines[y];
       for (int j = 0; j < line->len; j++) {
         struct Token *token = &line->buf[j];
+        enum ForegroundColor fg = get_token_foreground(token->group);
         for (int k = token->start; k < token->start + token->len; k++) {
-          frame[i + offsetY][k + offsetX].fg = FOREGROUND_YELLOW;
+          int x = k - doc->offsetX;
+          if (x < 0) continue;
+          frame[i + offsetY][x + offsetX].fg = fg;
         }
       }
     }

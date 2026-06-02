@@ -1,7 +1,7 @@
 #include "mappings.h"
 #include <string.h>
 
-struct Mapping mappings_list[] = {
+static struct Mapping mappings_list[] = {
     {"i", cmd_insert_mode_prev},
     {"a", cmd_insert_mode_next},
     {":", cmd_command_mode},
