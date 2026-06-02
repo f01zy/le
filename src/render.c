@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "defines.h"
 #include "render.h"
 
 void render_line(struct Context *ctx, struct Cell *buf, size_t len, int y) {
@@ -146,12 +147,37 @@ void render_buf(struct Context *ctx, struct Document *doc, struct Cell **frame) 
   }
 }
 
+void render_mappings_menu(struct Context *ctx, struct Document *doc, struct Cell **frame) {
+  struct MappingNode *node = ctx->curr_mapping;
+  int offsetY = get_tabmenu_margin(ctx);
+  int start_y = ctx->win.ws_row - offsetY - MAPPINGS_COL;
+  if (start_y < 0) return;
+  for (int i = start_y; i < start_y + MAPPINGS_COL; i++) {
+    for (int j = 0; j < ctx->win.ws_col; j++) {
+      frame[i][j] = (struct Cell){' ', RENDER_DEFAULT, FOREGROUND_DEFAULT, BACKGROUND_BLACK};
+    }
+  }
+  for (int i = 0; i < node->len; i++) {
+    struct MappingNode *curr = node->nodes[i];
+    char buf[MAX_BUFFER_SIZE];
+    int len = snprintf(buf, sizeof(buf), "%c - %s", curr->ch, curr->desc);
+    int offsetX = (i / MAPPINGS_COL) * MAPPINGS_COL_WIDTH + 1;
+    for (int j = 0; j < len && j < MAPPINGS_COL_WIDTH; j++) {
+      int x = offsetX + j;
+      int y = start_y + i % MAPPINGS_COL;
+      if (x >= ctx->win.ws_col) break;
+      frame[y][x].ch = buf[j];
+    }
+  }
+}
+
 void render(struct Context *ctx) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
+  render_buf(ctx, doc, ctx->curr_frame);
   if (ctx->ui.is_tabmenu) render_tabmenu(ctx, ctx->curr_frame);
   if (ctx->ui.is_line_numbers) render_line_numbers(ctx, doc, ctx->curr_frame);
   if (ctx->ui.is_statusline) render_statusline(ctx, doc, ctx->curr_frame);
-  render_buf(ctx, doc, ctx->curr_frame);
+  if (ctx->ui.is_mappings_menu) render_mappings_menu(ctx, doc, ctx->curr_frame);
 
   for (int i = 0; i < ctx->win.ws_row; i++) {
     for (int j = 0; j < ctx->win.ws_col; j++) {

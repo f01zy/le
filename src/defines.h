@@ -3,6 +3,8 @@
 
 #define ADDITIONAL_REALLOCATION     16
 #define MAX_BUFFER_SIZE             8192
+#define MAPPINGS_COL                8
+#define MAPPINGS_COL_WIDTH          40
 #define MAX_STRING_BUFFER_SIZE      256
 #define KEY_ENTER                   13
 #define KEY_BACKSPACE               127

@@ -19,6 +19,7 @@ void cmd_doc_close(struct Context *ctx);
 void cmd_command_mode(struct Context *ctx);
 void cmd_insert_mode_prev(struct Context *ctx);
 void cmd_insert_mode_next(struct Context *ctx);
+void cmd_toggle_mappings_menu(struct Context *ctx);
 void cmd_toggle_line_numbers(struct Context *ctx);
 
 void add_mapping_node(struct Context *ctx, struct MappingNode *head, struct Mapping map);

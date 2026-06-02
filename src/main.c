@@ -27,7 +27,11 @@ int main(int argc, char **argv) {
     __suseconds_t delta = (now.tv_sec - ctx.prev_frame_time.tv_sec) * 1000000LL + (now.tv_usec - ctx.prev_frame_time.tv_usec);
     ch = getchar_nonblock(20);
 
-    if (delta > 200000) exec_curr_mapping(&ctx);
+    if (ch == KEY_ESCAPE) reset_curr_mapping(&ctx);
+    if (!ctx.ui.is_mappings_menu && delta > 200000) {
+      exec_curr_mapping(&ctx);
+      render(&ctx);
+    }
     if (ch != -1) {
       ctx.prev_frame_time = now;
       switch (ctx.mode) {

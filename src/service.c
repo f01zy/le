@@ -29,6 +29,7 @@ void init_context(struct Context *ctx) {
       .is_line_numbers = true,
       .is_statusline = true,
       .is_tabmenu = true,
+      .is_mappings_menu = false,
   };
   ctx->curr_frame = create_frame(ctx);
   ctx->prev_frame = create_frame(ctx);
@@ -124,9 +125,14 @@ int getchar_nonblock(int ms) {
   return -1;
 }
 
+void reset_curr_mapping(struct Context *ctx) {
+  ctx->ui.is_mappings_menu = false;
+  ctx->curr_mapping = ctx->head_mapping;
+}
+
 void exec_curr_mapping(struct Context *ctx) {
   if (ctx->curr_mapping->act) ctx->curr_mapping->act(ctx);
-  ctx->curr_mapping = ctx->head_mapping;
+  if (ctx->curr_mapping->ch != ' ') reset_curr_mapping(ctx);
 }
 
 void set_statusline_message(struct Context *ctx, const char *msg, enum MessageLevel level) {

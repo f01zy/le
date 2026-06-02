@@ -18,6 +18,7 @@ void set_flag_to_quit(struct Context *ctx);
 void quit_editor(struct Context *ctx);
 
 struct Cell **create_frame(struct Context *ctx);
+void reset_curr_mapping(struct Context *ctx);
 void exec_curr_mapping(struct Context *ctx);
 void clear_cmd(struct Context *ctx);
 void unsaved_changes_dialog(struct Context *ctx, void (*on_confirm)(struct Context *ctx));

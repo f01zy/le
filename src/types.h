@@ -100,6 +100,7 @@ struct UI {
   bool is_line_numbers;
   bool is_statusline;
   bool is_tabmenu;
+  bool is_mappings_menu;
 };
 
 struct Line {
@@ -163,6 +164,7 @@ struct Context {
 
 struct MappingNode {
   int ch;
+  const char *desc;
   void (*act)(struct Context *ctx);
   struct MappingNode **nodes;
   size_t len;
@@ -170,6 +172,7 @@ struct MappingNode {
 
 struct Mapping {
   const char *cmd;
+  const char *desc;
   void (*act)(struct Context *ctx);
 };
 

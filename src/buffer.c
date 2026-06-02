@@ -12,7 +12,7 @@ struct Document *create_doc(struct Context *ctx) {
   ctx->len++;
   if (ctx->len > ctx->size) {
     ctx->size = ctx->len;
-    ctx->docs = (struct Document **)xrealloc(ctx->docs, ctx->size * sizeof(struct Document));
+    ctx->docs = (struct Document **)xrealloc(ctx->docs, ctx->size * sizeof(struct Document *));
   }
   add_line(doc, NULL, 0);
   ctx->docs[ctx->len - 1] = doc;
@@ -25,7 +25,12 @@ void set_doc_path(struct Document *doc, char *path) {
   char cwd[MAX_BUFFER_SIZE];
   if (!getcwd(cwd, sizeof(cwd))) return;
   char buf[MAX_BUFFER_SIZE];
-  int len = snprintf(buf, sizeof(buf), "%s/%s", cwd, path);
+  int len;
+  if (path[0] == '/') {
+    len = snprintf(buf, sizeof(buf), "%s", path);
+  } else {
+    len = snprintf(buf, sizeof(buf), "%s/%s", cwd, path);
+  }
   doc->path = (char *)xmalloc(len + 1);
   memcpy(doc->path, buf, len);
   doc->path[len] = '\0';
