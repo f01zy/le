@@ -41,6 +41,7 @@ int main(int argc, char **argv) {
         handle_dialog_mode(&ctx, ch);
         break;
       }
+      init_highlightings(doc);
       check_offset(&ctx, doc);
       render(&ctx);
     }

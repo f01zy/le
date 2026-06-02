@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "editor_commands.h"
+#include "service.h"
 
 struct Command commands_list[] = {
     {"open", command_open},
@@ -12,7 +13,7 @@ struct Command commands_list[] = {
 void command_quit(struct Context *ctx, char *token) {
   for (int i = 0; i < ctx->len; i++) {
     if (ctx->docs[i]->is_changed) {
-      set_statusline_dialog(ctx, "You have unsaved changed. Are you sure (Y/N): ", set_flag_to_quit, NULL);
+      unsaved_changes_dialog(ctx, set_flag_to_quit);
       return;
     }
   }
@@ -57,7 +58,7 @@ void command_unknown(struct Context *ctx, char *token) {
 void handle_command(struct Context *ctx) {
   int len = ctx->status.cmd.len;
   if (!len) return;
-  char cmd[MAX_STATUSLINE_BUFFER_SIZE];
+  char cmd[MAX_STRING_BUFFER_SIZE];
   memcpy(cmd, ctx->status.cmd.buf, sizeof(cmd));
   char *token = strtok(cmd, " ");
 

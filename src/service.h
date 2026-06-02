@@ -2,6 +2,7 @@
 #define SERVICE_INCLUDED
 
 #include "buffer.h"
+#include "lexer.h"
 #include "terminal.h"
 #include "ui.h"
 
@@ -11,11 +12,13 @@ void set_statusline_dialog(struct Context *ctx, const char *question, void (*on_
 void set_editor_mode(struct Context *ctx, enum EditorMode mode);
 void set_statusline_mode(struct Context *ctx, enum StatusMode mode);
 
+void init_highlightings(struct Document *doc);
 void init_context(struct Context *ctx);
 void init_editor(struct Context *ctx);
 void set_flag_to_quit(struct Context *ctx);
 void quit_editor(struct Context *ctx);
 
+void unsaved_changes_dialog(struct Context *ctx, void (*on_confirm)(struct Context *ctx));
 void free_mappings(struct Context *ctx, struct MappingNode *node);
 void free_resources(struct Context *ctx);
 void exec_curr_mapping(struct Context *ctx);

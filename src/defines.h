@@ -3,7 +3,7 @@
 
 #define ADDITIONAL_REALLOCATION     16
 #define MAX_BUFFER_SIZE             8192
-#define MAX_STATUSLINE_BUFFER_SIZE  256
+#define MAX_STRING_BUFFER_SIZE      256
 #define KEY_ENTER                   13
 #define KEY_BACKSPACE               127
 #define KEY_ESCAPE                  27

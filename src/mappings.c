@@ -1,5 +1,4 @@
 #include "mappings.h"
-#include <stdlib.h>
 #include <string.h>
 
 struct Mapping mappings_list[] = {
@@ -19,6 +18,7 @@ struct Mapping mappings_list[] = {
     {"G", cmd_doc_end},
     {"dn", cmd_doc_new},
     {"dc", cmd_doc_close},
+    {" n", cmd_toggle_line_numbers},
 };
 
 void cmd_up(struct Context *ctx) {
@@ -98,7 +98,7 @@ void cmd_doc_new(struct Context *ctx) {
 
 void cmd_doc_close(struct Context *ctx) {
   if (ctx->docs[ctx->curr_doc]->is_changed) {
-    set_statusline_dialog(ctx, "You have unsaved changed. Are you sure (Y/N): ", _cmd_doc_close, NULL);
+    unsaved_changes_dialog(ctx, _cmd_doc_close);
     return;
   }
   _cmd_doc_close(ctx);
@@ -125,6 +125,8 @@ void cmd_insert_mode_next(struct Context *ctx) {
   if (doc->buf[doc->y]->len > 0) doc->x++;
   set_editor_mode(ctx, EDITOR_MODE_INSERT);
 }
+
+void cmd_toggle_line_numbers(struct Context *ctx) { ctx->ui.is_line_numbers = !ctx->ui.is_line_numbers; }
 
 void add_mapping_node(struct Context *ctx, struct MappingNode *head, struct Mapping map) {
   struct MappingNode *curr = head;

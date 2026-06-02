@@ -58,8 +58,33 @@ enum EditorMode { EDITOR_MODE_NORMAL, EDITOR_MODE_INSERT, EDITOR_MODE_COMMAND, E
 enum StatusMode { STATUS_MODE_NORMAL, STATUS_MODE_COMMAND, STATUS_MODE_MESSAGE, STATUS_MODE_DIALOG };
 enum RemoveResult { REMOVE_NOTHING, REMOVE_CHAR, REMOVE_LINE };
 enum MessageLevel { MESSAGE_INFO, MESSAGE_WARNING, MESSAGE_ERROR };
+enum TokenType { LITERAL_STRING, LITERAL_NUMBER };
 
 struct Context;
+
+struct Token {
+  enum TokenType type;
+  size_t start, len;
+};
+
+struct TokenLine {
+  struct Token *buf;
+  size_t len, size;
+};
+
+struct Lexer {
+  int start;
+  int curr;
+  int line;
+  size_t len;
+  struct TokenLine **lines;
+  struct Document *doc;
+};
+
+struct Tokens {
+  struct TokenLine **lines;
+  size_t len;
+};
 
 struct UI {
   bool is_line_numbers;
@@ -82,28 +107,29 @@ struct Cell {
 struct Document {
   int x, y;
   int offsetX, offsetY;
-  size_t len, size;
   char *path;
   bool is_changed;
+  size_t len, size;
   struct Line **buf;
+  struct Tokens tokens;
 };
 
 struct StatusLine {
   enum StatusMode mode;
 
   struct {
-    char buf[MAX_STATUSLINE_BUFFER_SIZE];
+    char buf[MAX_STRING_BUFFER_SIZE];
     enum MessageLevel level;
   } msg;
 
   struct {
-    char buf[MAX_STATUSLINE_BUFFER_SIZE];
+    char buf[MAX_STRING_BUFFER_SIZE];
     void (*on_confirm)(struct Context *ctx);
     void (*on_deny)(struct Context *ctx);
   } dialog;
 
   struct {
-    char buf[MAX_STATUSLINE_BUFFER_SIZE];
+    char buf[MAX_STRING_BUFFER_SIZE];
     int len;
   } cmd;
 };

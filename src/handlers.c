@@ -16,6 +16,7 @@ void handle_normal_mode(struct Context *ctx, int ch) {
 void handle_insert_mode(struct Context *ctx, int ch) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
   doc->is_changed = true;
+
   switch (ch) {
   case KEY_ENTER:
     line_break(doc);
@@ -46,6 +47,8 @@ void handle_insert_mode(struct Context *ctx, int ch) {
     }
     break;
   }
+
+  init_highlightings(doc);
 }
 
 void handle_command_mode(struct Context *ctx, char ch) {
@@ -82,4 +85,5 @@ void handle_dialog_mode(struct Context *ctx, char ch) {
     if (ctx->status.dialog.on_deny) ctx->status.dialog.on_deny(ctx);
   }
   set_editor_mode(ctx, EDITOR_MODE_NORMAL);
+  set_statusline_mode(ctx, STATUS_MODE_NORMAL);
 }

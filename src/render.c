@@ -4,7 +4,6 @@
 #include <unistd.h>
 
 #include "render.h"
-#include "types.h"
 
 void render_line(struct Context *ctx, struct Cell *buf, size_t len, int y) {
   move_cursor_yx(y, 0);
@@ -55,9 +54,8 @@ void render_tabmenu(struct Context *ctx, struct Cell **frame) {
 }
 
 void render_line_numbers(struct Context *ctx, struct Document *doc, struct Cell **frame) {
+  int width = get_line_number_margin(ctx), height = get_buffer_height(ctx);
   int offsetY = get_tabmenu_margin(ctx);
-  int width = get_line_number_margin(ctx);
-  int height = get_buffer_height(ctx);
   char buf[MAX_BUFFER_SIZE];
   for (int i = 0; i < height; i++) {
     int y = doc->offsetY + i;
@@ -110,23 +108,37 @@ void render_statusline(struct Context *ctx, struct Document *doc, struct Cell **
 }
 
 void render_buf(struct Context *ctx, struct Document *doc, struct Cell **frame) {
-  int offsetX = get_line_number_margin(ctx);
-  int offsetY = get_tabmenu_margin(ctx);
-  int width = get_buffer_width(ctx);
-  int height = get_buffer_height(ctx);
+  int offsetX = get_line_number_margin(ctx), offsetY = get_tabmenu_margin(ctx);
+  int width = get_buffer_width(ctx), height = get_buffer_height(ctx);
+
   for (int i = 0; i < height; i++) {
-    int y = doc->offsetY + i;
+    int y = i + doc->offsetY;
     if (y >= doc->len) {
       for (int j = 0; j < width; j++) {
         frame[i + offsetY][j + offsetX] = CELL(' ');
       }
       continue;
-    };
+    }
+
     struct Line *line = doc->buf[y];
     for (int j = 0; j < width; j++) {
       int x = doc->offsetX + j;
       char ch = x < line->len ? line->buf[x] : ' ';
       frame[i + offsetY][j + offsetX] = CELL(ch);
+    }
+  }
+
+  if (doc->tokens.lines) {
+    for (int i = 0; i < height; i++) {
+      int y = i + doc->offsetY;
+      if (y >= doc->tokens.len) return;
+      struct TokenLine *line = doc->tokens.lines[y];
+      for (int j = 0; j < line->len; j++) {
+        struct Token *token = &line->buf[j];
+        for (int k = token->start; k < token->start + token->len; k++) {
+          frame[i + offsetY][k + offsetX].fg = FOREGROUND_YELLOW;
+        }
+      }
     }
   }
 }
@@ -137,9 +149,10 @@ void render(struct Context *ctx) {
   if (ctx->ui.is_line_numbers) render_line_numbers(ctx, doc, ctx->curr_frame);
   if (ctx->ui.is_statusline) render_statusline(ctx, doc, ctx->curr_frame);
   render_buf(ctx, doc, ctx->curr_frame);
+
   for (int i = 0; i < ctx->win.ws_row; i++) {
     for (int j = 0; j < ctx->win.ws_col; j++) {
-      if (!ctx->prev_frame || ctx->curr_frame[i][j].ch != ctx->prev_frame[i][j].ch || ctx->curr_frame[i][j].mode != ctx->prev_frame[i][j].mode) {
+      if (!ctx->prev_frame || memcmp(&ctx->curr_frame[i][j], &ctx->prev_frame[i][j], sizeof(ctx->curr_frame[i][j]))) {
         render_line(ctx, ctx->curr_frame[i], ctx->win.ws_col, i);
         break;
       }
@@ -148,6 +161,7 @@ void render(struct Context *ctx) {
   struct Cell **temp = ctx->prev_frame;
   ctx->prev_frame = ctx->curr_frame;
   ctx->curr_frame = temp;
+
   if (ctx->mode == EDITOR_MODE_COMMAND) {
     move_cursor_yx(ctx->win.ws_row - 1, ctx->status.cmd.len + 1);
   } else if (ctx->mode == EDITOR_MODE_DIALOG) {

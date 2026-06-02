@@ -1,5 +1,5 @@
 # Preview
-<img alt="preview" src="assets/preview.jpg" width = "350px" />
+<img alt="preview" src="assets/preview.jpg" width = "450px" />
 
 # Building
 ```

@@ -13,6 +13,7 @@ set(SOURCE
   ./src/handlers.c
   ./src/editor_commands.c
   ./src/mappings.c
+  ./src/lexer.c
 )
 
 add_executable(editor ${SOURCE})

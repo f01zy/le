@@ -100,8 +100,6 @@ void set_editor_mode(struct Context *ctx, enum EditorMode mode) {
   set_cursor_style(style);
 }
 
-void set_statusline_mode(struct Context *ctx, enum StatusMode mode) { ctx->status.mode = mode; }
-
 struct Cell **create_frame(struct Context *ctx) {
   struct Cell **frame = (struct Cell **)xmalloc(ctx->win.ws_row * sizeof(struct Cell *));
   for (int i = 0; i < ctx->win.ws_row; i++) {
@@ -149,4 +147,10 @@ void set_statusline_dialog(struct Context *ctx, const char *question, void (*on_
   ctx->status.dialog.on_deny = on_deny;
 }
 
+void unsaved_changes_dialog(struct Context *ctx, void (*on_confirm)(struct Context *ctx)) {
+  set_statusline_dialog(ctx, "You have unsaved changes. Are you sure (Y/N): ", on_confirm, NULL);
+}
+
+void set_statusline_mode(struct Context *ctx, enum StatusMode mode) { ctx->status.mode = mode; }
+void init_highlightings(struct Document *doc) { doc->tokens = scan_tokens(doc); }
 void set_flag_to_quit(struct Context *ctx) { ctx->is_need_quit = true; }
