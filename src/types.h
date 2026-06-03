@@ -104,6 +104,7 @@ struct Tokens {
 
 struct UI {
   bool is_line_numbers;
+  bool is_relative_line_numbers;
   bool is_statusline;
   bool is_tabmenu;
   bool is_mappings_menu;

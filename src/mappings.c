@@ -125,6 +125,7 @@ void cmd_visual_mode(struct Context *ctx) {
 
 // UI
 void cmd_toggle_line_numbers(struct Context *ctx) { ctx->ui.is_line_numbers = !ctx->ui.is_line_numbers; }
+void cmd_toggle_relative_line_numbers(struct Context *ctx) { ctx->ui.is_relative_line_numbers = !ctx->ui.is_relative_line_numbers; }
 void cmd_toggle_mappings_menu(struct Context *ctx) { ctx->ui.is_mappings_menu = true; }
 void cmd_toggle_code_highlighting(struct Context *ctx) { ctx->ui.is_code_highlighting = !ctx->ui.is_code_highlighting; }
 
@@ -137,6 +138,7 @@ void cmd_yank(struct Context *ctx) {
   struct Line *first = doc->buf[minY], *last = doc->buf[maxY];
   char buf[MAX_BUFFER_SIZE];
   int curr = 0;
+
   if (minY != maxY) {
     int first_len = first->len - minX, last_len = maxX + 1;
     xmemcpy(buf, sizeof(buf) - 1, first->buf + minX, first_len);
@@ -155,6 +157,7 @@ void cmd_yank(struct Context *ctx) {
     xmemcpy(buf, sizeof(buf) - 1, first->buf + minX, len);
     curr += len;
   }
+
   buf[curr] = '\0';
   copy_to_clipboard(buf);
   set_editor_mode(ctx, EDITOR_MODE_NORMAL);
@@ -164,7 +167,10 @@ void cmd_delete(struct Context *ctx) {
   if (ctx->mode == EDITOR_MODE_VISUAL) {
     struct Document *doc = ctx->docs[ctx->curr_doc];
     remove_range(doc, doc->selectedY, doc->selectedX, doc->y, doc->x);
+    doc->y = MIN(doc->y, doc->len - 1);
+    doc->x = MIN(doc->x, doc->buf[doc->y]->len);
     set_editor_mode(ctx, EDITOR_MODE_NORMAL);
+    init_highlightings(doc);
   }
 }
 

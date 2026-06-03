@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.5)
-project(editor)
+project(le 
+  VERSION 0.0.1 
+  DESCRIPTION "Light terminal vim-like text editor" 
+  HOMEPAGE_URL "https://github.com/f01zy/le"
+  LANGUAGES C
+)
 
 set(SOURCE
   ./src/main.c
@@ -16,4 +21,4 @@ set(SOURCE
   ./src/lexer.c
 )
 
-add_executable(editor ${SOURCE})
+add_executable(le ${SOURCE})

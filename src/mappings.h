@@ -17,6 +17,7 @@
   X(doc_new, "New document", " dn")                                                                                                                            \
   X(doc_close, "Close document", " dc")                                                                                                                        \
   X(toggle_line_numbers, "Toggle line numbers", " n")                                                                                                          \
+  X(toggle_relative_line_numbers, "Toggle relative line numbers", " rn")                                                                                       \
   X(toggle_mappings_menu, "Toggle mappings menu", " ")                                                                                                         \
   X(toggle_code_highlighting, "Toggle code highlighting", " h")                                                                                                \
   X(insert_mode_prev, "Enable insert mode", "i")                                                                                                               \

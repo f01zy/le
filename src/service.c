@@ -27,6 +27,7 @@ void init_context(struct Context *ctx) {
   gettimeofday(&ctx->prev_frame_time, NULL);
   struct UI ui = {
       .is_line_numbers = true,
+      .is_relative_line_numbers = false,
       .is_statusline = true,
       .is_tabmenu = true,
       .is_code_highlighting = true,

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -65,7 +66,8 @@ void render_line_numbers(struct Context *ctx, struct Document *doc, struct Cell 
       continue;
     };
     enum RenderMode mode = doc->y == y ? RENDER_DEFAULT : RENDER_DIM;
-    int len = snprintf(buf, sizeof(buf), "%d", y + 1);
+    int num = (ctx->ui.is_relative_line_numbers && doc->y != y) ? abs(doc->y - y) : y + 1;
+    int len = snprintf(buf, sizeof(buf), "%d", num);
     for (int j = 0; j < len; j++) {
       frame[i + offsetY][j] = CELL_MODE(buf[j], mode);
     }
@@ -161,7 +163,7 @@ void render_mappings_menu(struct Context *ctx, struct Document *doc, struct Cell
   if (startY < 1) return;
   for (int i = startY - 1; i < startY + MAPPINGS_COL; i++) {
     for (int j = 0; j < ctx->win.ws_col; j++) {
-      frame[i][j] = (struct Cell){' ', RENDER_DEFAULT, FOREGROUND_WHITE, BACKGROUND_BLACK};
+      frame[i][j] = (struct Cell){' ', RENDER_DEFAULT, FOREGROUND_WHITE, BACKGROUND_GRAY};
     }
   }
   for (int i = 0; i < node->len; i++) {

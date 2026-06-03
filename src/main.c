@@ -28,8 +28,8 @@ int main(int argc, char **argv) {
     ch = getchar_nonblock(20);
 
     if (ch == KEY_ESCAPE) {
-      reset_curr_mapping(&ctx);
       if (doc->x) doc->x--;
+      reset_curr_mapping(&ctx);
       set_editor_mode(&ctx, EDITOR_MODE_NORMAL);
       set_statusline_mode(&ctx, STATUS_MODE_NORMAL);
       clear_cmd(&ctx);
@@ -42,7 +42,6 @@ int main(int argc, char **argv) {
       ctx.prev_frame_time = now;
       switch (ctx.mode) {
       case EDITOR_MODE_INSERT:
-        init_highlightings(doc);
         handle_insert_mode(&ctx, ch);
         break;
       case EDITOR_MODE_VISUAL:
