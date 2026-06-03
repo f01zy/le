@@ -9,8 +9,8 @@ static const char *keywords[] = {
 };
 
 static const char *data_types[] = {
-    "int",    "char",  "float", "double", "void",   "long",   "short",    "signed",   "unsigned",
-    "struct", "union", "enum",  "const",  "static", "extern", "volatile", "register",
+    "int",   "char", "float", "double", "void",   "long",     "short",    "signed", "unsigned", "struct",
+    "union", "enum", "const", "static", "extern", "volatile", "register", "bool",   "size_t",
 };
 
 struct Tokens scan_tokens(struct Document *doc) {
@@ -49,6 +49,12 @@ char peek_next(struct Lexer *lexer) {
   return line->buf[lexer->curr + 1];
 }
 
+char peek_prev(struct Lexer *lexer) {
+  struct Line *line = lexer->doc->buf[lexer->line];
+  if (!lexer->curr) return '\0';
+  return line->buf[lexer->curr - 1];
+}
+
 void scan_token(struct Lexer *lexer) {
   char ch = advance(lexer);
   switch (ch) {
@@ -81,6 +87,7 @@ void scan_token(struct Lexer *lexer) {
 
 void scan_quoted_literal(struct Lexer *lexer, char delimiter) {
   while (peek(lexer) != delimiter && !is_at_end(lexer)) {
+    if (peek(lexer) == '\\') advance(lexer);
     advance(lexer);
   }
   if (peek(lexer) == '\0') return;
@@ -159,11 +166,11 @@ void add_token(struct Lexer *lexer, enum TokenGroup group) {
 }
 
 void free_tokens(struct Document *doc) {
-  if (doc->tokens.lines) {
+  if (doc->tokens.buf) {
     for (int i = 0; i < doc->tokens.len; i++) {
-      free(doc->tokens.lines[i]);
+      free(doc->tokens.buf[i]);
     }
-    free(doc->tokens.lines);
+    free(doc->tokens.buf);
   }
   doc->tokens = (struct Tokens){NULL, 0};
 }

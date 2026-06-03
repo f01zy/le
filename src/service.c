@@ -29,6 +29,7 @@ void init_context(struct Context *ctx) {
       .is_line_numbers = true,
       .is_statusline = true,
       .is_tabmenu = true,
+      .is_code_highlighting = true,
       .is_mappings_menu = false,
   };
   ctx->curr_frame = create_frame(ctx);
@@ -67,6 +68,7 @@ void free_resources(struct Context *ctx) {
       free(line->buf);
       free(line);
     }
+    free_tokens(doc);
     free(doc);
   }
   free(ctx->docs);

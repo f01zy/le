@@ -2,23 +2,9 @@
 #include <string.h>
 
 static struct Mapping mappings_list[] = {
-    {"i", "Enable insert mode", cmd_insert_mode_prev},
-    {"a", "Enable insert mode", cmd_insert_mode_next},
-    {":", "Enable command mode", cmd_command_mode},
-    {"h", "Move left", cmd_left},
-    {"l", "Move right", cmd_right},
-    {"j", "Move down", cmd_down},
-    {"k", "Move up", cmd_up},
-    {"0", "Move to start of line", cmd_line_start},
-    {"$", "Move to end of line", cmd_line_end},
-    {"gg", "Move to start of document", cmd_doc_start},
-    {"G", "Move to end of document", cmd_doc_end},
-    {KEY_SHIFT_TAB, "Move to previous document", cmd_doc_prev},
-    {"\t", "Move to next document", cmd_doc_next},
-    {" d", "New document", cmd_doc_new},
-    {" x", "Close document", cmd_doc_close},
-    {" n", "Toggle line numbers", cmd_toggle_line_numbers},
-    {" ", "Toggle mappings menu", cmd_toggle_mappings_menu},
+#define X(name, desc, mapping) {mapping, desc, cmd_##name},
+    COMMANDS_LIST
+#undef X
 };
 
 void cmd_up(struct Context *ctx) {
@@ -96,14 +82,6 @@ void cmd_doc_new(struct Context *ctx) {
   ctx->curr_doc = ctx->len - 1;
 }
 
-void cmd_doc_close(struct Context *ctx) {
-  if (ctx->docs[ctx->curr_doc]->is_changed) {
-    unsaved_changes_dialog(ctx, _cmd_doc_close);
-    return;
-  }
-  _cmd_doc_close(ctx);
-}
-
 void _cmd_doc_close(struct Context *ctx) {
   if (ctx->len == 1) return;
   ctx->len--;
@@ -111,6 +89,14 @@ void _cmd_doc_close(struct Context *ctx) {
     ctx->docs[i] = ctx->docs[i + 1];
   }
   ctx->curr_doc = MIN(ctx->curr_doc, ctx->len - 1);
+}
+
+void cmd_doc_close(struct Context *ctx) {
+  if (ctx->docs[ctx->curr_doc]->is_changed) {
+    unsaved_changes_dialog(ctx, _cmd_doc_close);
+    return;
+  }
+  _cmd_doc_close(ctx);
 }
 
 void cmd_command_mode(struct Context *ctx) {
@@ -128,6 +114,7 @@ void cmd_insert_mode_next(struct Context *ctx) {
 
 void cmd_toggle_line_numbers(struct Context *ctx) { ctx->ui.is_line_numbers = !ctx->ui.is_line_numbers; }
 void cmd_toggle_mappings_menu(struct Context *ctx) { ctx->ui.is_mappings_menu = true; }
+void cmd_toggle_code_highlighting(struct Context *ctx) { ctx->ui.is_code_highlighting = !ctx->ui.is_code_highlighting; }
 
 void add_mapping_node(struct Context *ctx, struct MappingNode *head, struct Mapping map) {
   struct MappingNode *curr = head;

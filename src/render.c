@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -127,15 +126,12 @@ void render_buf(struct Context *ctx, struct Document *doc, struct Cell **frame) 
       char ch = x < line->len ? line->buf[x] : ' ';
       frame[i + offsetY][j + offsetX] = CELL(ch);
     }
-  }
 
-  if (doc->tokens.lines) {
-    for (int i = 0; i < height; i++) {
-      int y = i + doc->offsetY;
-      if (y >= doc->tokens.len) return;
-      struct TokenLine *line = doc->tokens.lines[y];
-      for (int j = 0; j < line->len; j++) {
-        struct Token *token = &line->buf[j];
+    // TODO: сделать какую-нибудь мемоизацию
+    if (ctx->ui.is_code_highlighting && doc->tokens.buf) {
+      struct TokenLine *tokens_line = doc->tokens.buf[y];
+      for (int j = 0; j < tokens_line->len; j++) {
+        struct Token *token = &tokens_line->buf[j];
         enum ForegroundColor fg = get_token_foreground(token->group);
         for (int k = token->start; k < token->start + token->len; k++) {
           int x = k - doc->offsetX;
@@ -150,9 +146,9 @@ void render_buf(struct Context *ctx, struct Document *doc, struct Cell **frame) 
 void render_mappings_menu(struct Context *ctx, struct Document *doc, struct Cell **frame) {
   struct MappingNode *node = ctx->curr_mapping;
   int offsetY = get_tabmenu_margin(ctx);
-  int start_y = ctx->win.ws_row - offsetY - MAPPINGS_COL;
-  if (start_y < 0) return;
-  for (int i = start_y; i < start_y + MAPPINGS_COL; i++) {
+  int startY = ctx->win.ws_row - offsetY - MAPPINGS_COL;
+  if (startY < 1) return;
+  for (int i = startY - 1; i < startY + MAPPINGS_COL; i++) {
     for (int j = 0; j < ctx->win.ws_col; j++) {
       frame[i][j] = (struct Cell){' ', RENDER_DEFAULT, FOREGROUND_DEFAULT, BACKGROUND_BLACK};
     }
@@ -160,11 +156,16 @@ void render_mappings_menu(struct Context *ctx, struct Document *doc, struct Cell
   for (int i = 0; i < node->len; i++) {
     struct MappingNode *curr = node->nodes[i];
     char buf[MAX_BUFFER_SIZE];
-    int len = snprintf(buf, sizeof(buf), "%c - %s", curr->ch, curr->desc);
-    int offsetX = (i / MAPPINGS_COL) * MAPPINGS_COL_WIDTH + 1;
+    int len;
+    if (curr->desc) {
+      len = snprintf(buf, sizeof(buf), "%c - %s", curr->ch, curr->desc);
+    } else {
+      len = snprintf(buf, sizeof(buf), "%c +%zu mappings", curr->ch, curr->len);
+    }
+    int offsetX = (i / MAPPINGS_COL) * MAPPINGS_COL_WIDTH + 2;
     for (int j = 0; j < len && j < MAPPINGS_COL_WIDTH; j++) {
       int x = offsetX + j;
-      int y = start_y + i % MAPPINGS_COL;
+      int y = startY + i % MAPPINGS_COL;
       if (x >= ctx->win.ws_col) break;
       frame[y][x].ch = buf[j];
     }

@@ -92,7 +92,7 @@ struct Lexer {
 };
 
 struct Tokens {
-  struct TokenLine **lines;
+  struct TokenLine **buf;
   size_t len;
 };
 
@@ -101,6 +101,7 @@ struct UI {
   bool is_statusline;
   bool is_tabmenu;
   bool is_mappings_menu;
+  bool is_code_highlighting;
 };
 
 struct Line {
