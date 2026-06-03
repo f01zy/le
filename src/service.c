@@ -180,7 +180,20 @@ enum ForegroundColor get_token_foreground(enum TokenGroup group) {
     return FOREGROUND_RED;
 
   default:
-    return FOREGROUND_DEFAULT;
+    return FOREGROUND_WHITE;
+  }
+}
+
+const char *get_editor_mode_label(struct Context *ctx) {
+  switch (ctx->mode) {
+  case EDITOR_MODE_INSERT:
+    return "INSERT";
+  case EDITOR_MODE_VISUAL:
+    return "VISUAL";
+    break;
+  default:
+    return "NORMAL";
+    break;
   }
 }
 

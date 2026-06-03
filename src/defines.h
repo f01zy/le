@@ -16,10 +16,10 @@
 #define ANSI_RESET_LINE_TO_CURSOR   write(STDOUT_FILENO, "\x1b[0K", 4)
 #define ANSI_MOVE_CURSOR_YX         "\x1b[%d;%dH"
 #define ANSI_CURSOR_TYPE            "\x1b[%d q"
-#define ANSI_RENDER_MODE            "\x1b[%d;%d;%dm"
+#define ANSI_RENDER_MODE            "\x1b[%d;38;5;%d;48;5;%dm"
 #define MIN(A, B)                   ((A) < (B) ? (A) : (B))
 #define MAX(A, B)                   ((A) > (B) ? (A) : (B))
-#define CELL(ch)                    ((struct Cell){(ch), RENDER_DEFAULT, FOREGROUND_DEFAULT, BACKGROUND_DEFAULT})
-#define CELL_MODE(ch, mode)         ((struct Cell){(ch), (mode), FOREGROUND_DEFAULT, BACKGROUND_DEFAULT})
+#define CELL(ch)                    ((struct Cell){(ch), RENDER_DEFAULT, FOREGROUND_WHITE, BACKGROUND_BLACK})
+#define CELL_MODE(ch, mode)         ((struct Cell){(ch), (mode), FOREGROUND_WHITE, BACKGROUND_BLACK})
 
 #endif

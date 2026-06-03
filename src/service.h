@@ -27,6 +27,7 @@ void free_resources(struct Context *ctx);
 void check_offset(struct Context *ctx, struct Document *doc);
 int getchar_nonblock(int ms);
 const char *get_file_name(char *path);
+const char *get_editor_mode_label(struct Context *ctx);
 enum ForegroundColor get_token_foreground(enum TokenGroup group);
 
 #endif

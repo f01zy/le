@@ -7,6 +7,7 @@ static struct Mapping mappings_list[] = {
 #undef X
 };
 
+// Movement
 void cmd_up(struct Context *ctx) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
   if (!doc->y) return;
@@ -44,6 +45,7 @@ void cmd_right(struct Context *ctx) {
   }
 }
 
+// Lines
 void cmd_line_start(struct Context *ctx) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
   doc->x = 0;
@@ -54,6 +56,7 @@ void cmd_line_end(struct Context *ctx) {
   doc->x = get_max_x(doc->buf[doc->y]);
 }
 
+// Documents
 void cmd_doc_start(struct Context *ctx) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
   doc->x = MIN(doc->x, get_max_x(doc->buf[0]));
@@ -99,6 +102,7 @@ void cmd_doc_close(struct Context *ctx) {
   _cmd_doc_close(ctx);
 }
 
+// Editor modes
 void cmd_command_mode(struct Context *ctx) {
   set_editor_mode(ctx, EDITOR_MODE_COMMAND);
   set_statusline_mode(ctx, STATUS_MODE_COMMAND);
@@ -112,9 +116,28 @@ void cmd_insert_mode_next(struct Context *ctx) {
   set_editor_mode(ctx, EDITOR_MODE_INSERT);
 }
 
+void cmd_visual_mode(struct Context *ctx) {
+  struct Document *doc = ctx->docs[ctx->curr_doc];
+  doc->selectedX = doc->x;
+  doc->selectedY = doc->y;
+  set_editor_mode(ctx, EDITOR_MODE_VISUAL);
+}
+
+// UI
 void cmd_toggle_line_numbers(struct Context *ctx) { ctx->ui.is_line_numbers = !ctx->ui.is_line_numbers; }
 void cmd_toggle_mappings_menu(struct Context *ctx) { ctx->ui.is_mappings_menu = true; }
 void cmd_toggle_code_highlighting(struct Context *ctx) { ctx->ui.is_code_highlighting = !ctx->ui.is_code_highlighting; }
+
+// Visual mode
+void cmd_yank(struct Context *ctx) {
+  // TODO: копировать в буфер обмена
+  set_editor_mode(ctx, EDITOR_MODE_NORMAL);
+}
+
+void cmd_delete(struct Context *ctx) {
+  // TODO: удалить выделенный текст
+  set_editor_mode(ctx, EDITOR_MODE_NORMAL);
+}
 
 void add_mapping_node(struct Context *ctx, struct MappingNode *head, struct Mapping map) {
   struct MappingNode *curr = head;

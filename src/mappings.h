@@ -8,9 +8,6 @@
   X(down, "Move down", "j")                                                                                                                                    \
   X(right, "Move right", "l")                                                                                                                                  \
   X(left, "Move left", "h")                                                                                                                                    \
-  X(insert_mode_prev, "Enable insert mode", "i")                                                                                                               \
-  X(insert_mode_next, "Enable insert mode", "a")                                                                                                               \
-  X(command_mode, "Enable command mode", ":")                                                                                                                  \
   X(line_start, "Move to start of line", "0")                                                                                                                  \
   X(line_end, "Move to end of line", "$")                                                                                                                      \
   X(doc_start, "Move to start of document", "gg")                                                                                                              \
@@ -21,7 +18,13 @@
   X(doc_close, "Close document", " dc")                                                                                                                        \
   X(toggle_line_numbers, "Toggle line numbers", " n")                                                                                                          \
   X(toggle_mappings_menu, "Toggle mappings menu", " ")                                                                                                         \
-  X(toggle_code_highlighting, "Toggle code highlighting", " h")
+  X(toggle_code_highlighting, "Toggle code highlighting", " h")                                                                                                \
+  X(insert_mode_prev, "Enable insert mode", "i")                                                                                                               \
+  X(insert_mode_next, "Enable insert mode", "a")                                                                                                               \
+  X(command_mode, "Enable command mode", ":")                                                                                                                  \
+  X(visual_mode, "Enable visual mode", "v")                                                                                                                    \
+  X(yank, "Yank selected text", "y")                                                                                                                           \
+  X(delete, "Delete selected text", "d")
 
 #define X(name, desc, mapping) void cmd_##name(struct Context *ctx);
 COMMANDS_LIST

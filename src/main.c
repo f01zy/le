@@ -27,7 +27,10 @@ int main(int argc, char **argv) {
     __suseconds_t delta = (now.tv_sec - ctx.prev_frame_time.tv_sec) * 1000000LL + (now.tv_usec - ctx.prev_frame_time.tv_usec);
     ch = getchar_nonblock(20);
 
-    if (ch == KEY_ESCAPE) reset_curr_mapping(&ctx);
+    if (ch == KEY_ESCAPE) {
+      reset_curr_mapping(&ctx);
+      set_editor_mode(&ctx, EDITOR_MODE_NORMAL);
+    }
     if (!ctx.ui.is_mappings_menu && delta > 200000) {
       exec_curr_mapping(&ctx);
       render(&ctx);
@@ -39,6 +42,7 @@ int main(int argc, char **argv) {
         init_highlightings(doc);
         handle_insert_mode(&ctx, ch);
         break;
+      case EDITOR_MODE_VISUAL:
       case EDITOR_MODE_NORMAL:
         handle_normal_mode(&ctx, ch);
         break;

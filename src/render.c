@@ -2,7 +2,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "defines.h"
 #include "render.h"
 
 void render_line(struct Context *ctx, struct Cell *buf, size_t len, int y) {
@@ -79,7 +78,7 @@ void render_line_numbers(struct Context *ctx, struct Document *doc, struct Cell 
 void render_statusline(struct Context *ctx, struct Document *doc, struct Cell **frame) {
   char buf[MAX_BUFFER_SIZE];
   int len = 0, y = ctx->win.ws_row - 1;
-  enum ForegroundColor fg = FOREGROUND_DEFAULT;
+  enum ForegroundColor fg = FOREGROUND_WHITE;
 
   switch (ctx->status.mode) {
   case STATUS_MODE_MESSAGE:
@@ -89,7 +88,7 @@ void render_statusline(struct Context *ctx, struct Document *doc, struct Cell **
     break;
 
   case STATUS_MODE_NORMAL:;
-    const char *label = ctx->mode == EDITOR_MODE_INSERT ? "INSERT" : "NORMAL";
+    const char *label = get_editor_mode_label(ctx);
     len = snprintf(buf, sizeof(buf), "-- %s -- %d/%d", label, doc->y + 1, doc->x + 1);
     break;
 
@@ -103,7 +102,7 @@ void render_statusline(struct Context *ctx, struct Document *doc, struct Cell **
   }
 
   for (int i = 0; i < ctx->win.ws_col; i++) {
-    frame[y][i] = i < len ? (struct Cell){buf[i], RENDER_DEFAULT, fg, BACKGROUND_DEFAULT} : CELL(' ');
+    frame[y][i] = i < len ? (struct Cell){buf[i], RENDER_DEFAULT, fg, BACKGROUND_BLACK} : CELL(' ');
   }
 }
 
@@ -124,9 +123,37 @@ void render_buf(struct Context *ctx, struct Document *doc, struct Cell **frame) 
     for (int j = 0; j < width; j++) {
       int x = doc->offsetX + j;
       char ch = x < line->len ? line->buf[x] : ' ';
-      frame[i + offsetY][j + offsetX] = CELL(ch);
+
+      // Highlight selected text
+      enum BackgroundColor bg = BACKGROUND_BLACK;
+      if (ctx->mode == EDITOR_MODE_VISUAL) {
+        int minX, maxX, minY, maxY;
+        if (doc->selectedY == doc->y) {
+          minY = maxY = doc->y;
+          minX = MIN(doc->selectedX, doc->x);
+          maxX = MAX(doc->selectedX, doc->x);
+        } else if (doc->selectedY > doc->y) {
+          minY = doc->y;
+          minX = doc->x;
+          maxY = doc->selectedY;
+          maxX = doc->selectedX;
+        } else {
+          minY = doc->selectedY;
+          minX = doc->selectedX;
+          maxY = doc->y;
+          maxX = doc->x;
+        }
+
+        if ((y == minY && minY == maxY && x >= minX && x <= maxX) ||
+            (minY != maxY && ((y > minY && y < maxY) || (y == minY && x >= minX) || (y == maxY && x <= maxX)))) {
+          bg = BACKGROUND_GRAY;
+        }
+      }
+
+      frame[i + offsetY][j + offsetX] = (struct Cell){ch, RENDER_DEFAULT, FOREGROUND_WHITE, bg};
     }
 
+    // Code highlighting
     // TODO: сделать какую-нибудь мемоизацию
     if (ctx->ui.is_code_highlighting && doc->tokens.buf) {
       struct TokenLine *tokens_line = doc->tokens.buf[y];
@@ -150,7 +177,7 @@ void render_mappings_menu(struct Context *ctx, struct Document *doc, struct Cell
   if (startY < 1) return;
   for (int i = startY - 1; i < startY + MAPPINGS_COL; i++) {
     for (int j = 0; j < ctx->win.ws_col; j++) {
-      frame[i][j] = (struct Cell){' ', RENDER_DEFAULT, FOREGROUND_DEFAULT, BACKGROUND_BLACK};
+      frame[i][j] = (struct Cell){' ', RENDER_DEFAULT, FOREGROUND_WHITE, BACKGROUND_BLACK};
     }
   }
   for (int i = 0; i < node->len; i++) {
