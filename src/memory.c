@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "memory.h"
 
@@ -28,4 +29,9 @@ void *xrealloc(void *ptr, size_t size) {
     exit(1);
   }
   return new_ptr;
+}
+
+void *xmemcpy(void *dest, size_t dest_size, const void *src, size_t n) {
+  if (n > dest_size) return NULL;
+  return memcpy(dest, src, n);
 }

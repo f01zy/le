@@ -130,13 +130,42 @@ void cmd_toggle_code_highlighting(struct Context *ctx) { ctx->ui.is_code_highlig
 
 // Visual mode
 void cmd_yank(struct Context *ctx) {
-  // TODO: копировать в буфер обмена
+  if (ctx->mode != EDITOR_MODE_VISUAL) return;
+  struct Document *doc = ctx->docs[ctx->curr_doc];
+  int minY = doc->selectedY, minX = doc->selectedX, maxY = doc->y, maxX = doc->x;
+  get_selected_coordinates(&minY, &minX, &maxY, &maxX);
+  struct Line *first = doc->buf[minY], *last = doc->buf[maxY];
+  char buf[MAX_BUFFER_SIZE];
+  int curr = 0;
+  if (minY != maxY) {
+    int first_len = first->len - minX, last_len = maxX + 1;
+    xmemcpy(buf, sizeof(buf) - 1, first->buf + minX, first_len);
+    curr += first_len;
+    buf[curr++] = '\n';
+    for (int i = minY + 1; i < maxY; i++) {
+      struct Line *line = doc->buf[i];
+      xmemcpy(buf + curr, sizeof(buf) - curr - 1, line->buf, line->len);
+      curr += line->len;
+      buf[curr++] = '\n';
+    }
+    xmemcpy(buf + curr, sizeof(buf) - curr - 1, last->buf, last_len);
+    curr += last_len;
+  } else {
+    int len = maxX - minX + 1;
+    xmemcpy(buf, sizeof(buf) - 1, first->buf + minX, len);
+    curr += len;
+  }
+  buf[curr] = '\0';
+  copy_to_clipboard(buf);
   set_editor_mode(ctx, EDITOR_MODE_NORMAL);
 }
 
 void cmd_delete(struct Context *ctx) {
-  // TODO: удалить выделенный текст
-  set_editor_mode(ctx, EDITOR_MODE_NORMAL);
+  if (ctx->mode == EDITOR_MODE_VISUAL) {
+    struct Document *doc = ctx->docs[ctx->curr_doc];
+    remove_range(doc, doc->selectedY, doc->selectedX, doc->y, doc->x);
+    set_editor_mode(ctx, EDITOR_MODE_NORMAL);
+  }
 }
 
 void add_mapping_node(struct Context *ctx, struct MappingNode *head, struct Mapping map) {

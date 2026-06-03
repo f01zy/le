@@ -197,6 +197,18 @@ const char *get_editor_mode_label(struct Context *ctx) {
   }
 }
 
+void copy_to_clipboard(const char *data) {
+#ifdef WIN32
+// TODO: копирование на винде
+#else
+  FILE *pipe = popen("xclip -selection clipboard", "w");
+  if (pipe) {
+    fprintf(pipe, "%s", data);
+    pclose(pipe);
+  }
+#endif
+}
+
 void set_statusline_mode(struct Context *ctx, enum StatusMode mode) { ctx->status.mode = mode; }
 void init_highlightings(struct Document *doc) { doc->tokens = scan_tokens(doc); }
 void set_flag_to_quit(struct Context *ctx) { ctx->is_need_quit = true; }

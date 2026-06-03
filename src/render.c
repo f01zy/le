@@ -127,23 +127,8 @@ void render_buf(struct Context *ctx, struct Document *doc, struct Cell **frame) 
       // Highlight selected text
       enum BackgroundColor bg = BACKGROUND_BLACK;
       if (ctx->mode == EDITOR_MODE_VISUAL) {
-        int minX, maxX, minY, maxY;
-        if (doc->selectedY == doc->y) {
-          minY = maxY = doc->y;
-          minX = MIN(doc->selectedX, doc->x);
-          maxX = MAX(doc->selectedX, doc->x);
-        } else if (doc->selectedY > doc->y) {
-          minY = doc->y;
-          minX = doc->x;
-          maxY = doc->selectedY;
-          maxX = doc->selectedX;
-        } else {
-          minY = doc->selectedY;
-          minX = doc->selectedX;
-          maxY = doc->y;
-          maxX = doc->x;
-        }
-
+        int minY = doc->selectedY, minX = doc->selectedX, maxY = doc->y, maxX = doc->x;
+        get_selected_coordinates(&minY, &minX, &maxY, &maxX);
         if ((y == minY && minY == maxY && x >= minX && x <= maxX) ||
             (minY != maxY && ((y > minY && y < maxY) || (y == minY && x >= minX) || (y == maxY && x <= maxX)))) {
           bg = BACKGROUND_GRAY;
@@ -154,7 +139,6 @@ void render_buf(struct Context *ctx, struct Document *doc, struct Cell **frame) 
     }
 
     // Code highlighting
-    // TODO: сделать какую-нибудь мемоизацию
     if (ctx->ui.is_code_highlighting && doc->tokens.buf) {
       struct TokenLine *tokens_line = doc->tokens.buf[y];
       for (int j = 0; j < tokens_line->len; j++) {
@@ -183,12 +167,7 @@ void render_mappings_menu(struct Context *ctx, struct Document *doc, struct Cell
   for (int i = 0; i < node->len; i++) {
     struct MappingNode *curr = node->nodes[i];
     char buf[MAX_BUFFER_SIZE];
-    int len;
-    if (curr->desc) {
-      len = snprintf(buf, sizeof(buf), "%c - %s", curr->ch, curr->desc);
-    } else {
-      len = snprintf(buf, sizeof(buf), "%c +%zu mappings", curr->ch, curr->len);
-    }
+    int len = curr->desc ? snprintf(buf, sizeof(buf), "%c - %s", curr->ch, curr->desc) : snprintf(buf, sizeof(buf), "%c +%zu mappings", curr->ch, curr->len);
     int offsetX = (i / MAPPINGS_COL) * MAPPINGS_COL_WIDTH + 2;
     for (int j = 0; j < len && j < MAPPINGS_COL_WIDTH; j++) {
       int x = offsetX + j;

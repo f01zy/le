@@ -17,6 +17,7 @@ void init_editor(struct Context *ctx);
 void set_flag_to_quit(struct Context *ctx);
 void quit_editor(struct Context *ctx);
 
+void copy_to_clipboard(const char *data);
 struct Cell **create_frame(struct Context *ctx);
 void reset_curr_mapping(struct Context *ctx);
 void exec_curr_mapping(struct Context *ctx);

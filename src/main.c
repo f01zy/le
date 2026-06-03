@@ -29,7 +29,10 @@ int main(int argc, char **argv) {
 
     if (ch == KEY_ESCAPE) {
       reset_curr_mapping(&ctx);
+      if (doc->x) doc->x--;
       set_editor_mode(&ctx, EDITOR_MODE_NORMAL);
+      set_statusline_mode(&ctx, STATUS_MODE_NORMAL);
+      clear_cmd(&ctx);
     }
     if (!ctx.ui.is_mappings_menu && delta > 200000) {
       exec_curr_mapping(&ctx);

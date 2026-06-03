@@ -38,11 +38,6 @@ void handle_insert_mode(struct Context *ctx, int ch) {
     }
     break;
 
-  case KEY_ESCAPE:
-    if (doc->x) doc->x--;
-    set_editor_mode(ctx, EDITOR_MODE_NORMAL);
-    break;
-
   default:
     if (ch >= 32 && ch <= 126) {
       write_to_line(doc, doc->y, doc->x, ch);
@@ -56,12 +51,6 @@ void handle_insert_mode(struct Context *ctx, int ch) {
 
 void handle_command_mode(struct Context *ctx, char ch) {
   switch (ch) {
-  case KEY_ESCAPE:
-    clear_cmd(ctx);
-    set_editor_mode(ctx, EDITOR_MODE_NORMAL);
-    set_statusline_mode(ctx, STATUS_MODE_NORMAL);
-    break;
-
   case KEY_ENTER:
     handle_command(ctx);
     if (ctx->mode != EDITOR_MODE_DIALOG) set_editor_mode(ctx, EDITOR_MODE_NORMAL);
