@@ -58,15 +58,15 @@ void render_line_numbers(struct Context *ctx, struct Document *doc, struct Cell 
   int offsetY = get_tabmenu_margin(ctx);
   char buf[MAX_BUFFER_SIZE];
   for (int i = 0; i < height; i++) {
-    int y = doc->offsetY + i;
+    int y = doc->offset.y + i;
     if (y >= doc->len) {
       for (int j = 0; j < width; j++) {
         frame[i + offsetY][j] = CELL(' ');
       }
       continue;
     };
-    enum RenderMode mode = doc->y == y ? RENDER_DEFAULT : RENDER_DIM;
-    int num = (ctx->ui.is_relative_line_numbers && doc->y != y) ? abs(doc->y - y) : y + 1;
+    enum RenderMode mode = doc->pos.y == y ? RENDER_DEFAULT : RENDER_DIM;
+    int num = (ctx->ui.is_relative_line_numbers && doc->pos.y != y) ? abs(doc->pos.y - y) : y + 1;
     size_t len = snprintf(buf, sizeof(buf), "%d", num);
     for (int j = 0; j < len; j++) {
       frame[i + offsetY][j] = CELL_MODE(buf[j], mode);
@@ -93,7 +93,7 @@ void render_statusline(struct Context *ctx, struct Document *doc, struct Cell **
 
   case STATUS_MODE_NORMAL:;
     const char *label = get_editor_mode_label(ctx);
-    len = snprintf(buf, sizeof(buf), "-- %s -- %d/%d", label, doc->y + 1, doc->x + 1);
+    len = snprintf(buf, sizeof(buf), "-- %s -- %d/%d", label, doc->pos.y + 1, doc->pos.x + 1);
     break;
 
   case STATUS_MODE_COMMAND:
@@ -115,7 +115,7 @@ void render_buf(struct Context *ctx, struct Document *doc, struct Cell **frame) 
   int width = get_buffer_width(ctx), height = get_buffer_height(ctx);
 
   for (int i = 0; i < height; i++) {
-    int y = i + doc->offsetY;
+    int y = i + doc->offset.y;
     if (y >= doc->len) {
       for (int j = 0; j < width; j++) {
         frame[i + offsetY][j + offsetX] = CELL(' ');
@@ -125,15 +125,15 @@ void render_buf(struct Context *ctx, struct Document *doc, struct Cell **frame) 
 
     struct Line *line = doc->buf[y];
     for (int j = 0; j < width; j++) {
-      int x = doc->offsetX + j;
+      int x = doc->offset.x + j;
       char ch = x < line->len ? line->buf[x] : ' ';
 
       enum BackgroundColor bg = BACKGROUND_BLACK;
       if (ctx->mode == EDITOR_MODE_VISUAL) {
-        int minY = doc->selectedY, minX = doc->selectedX, maxY = doc->y, maxX = doc->x;
-        get_selected_coordinates(&minY, &minX, &maxY, &maxX);
-        if ((y == minY && minY == maxY && x >= minX && x <= maxX) ||
-            (minY != maxY && ((y > minY && y < maxY) || (y == minY && x >= minX) || (y == maxY && x <= maxX)))) {
+        struct Vec4 c = {doc->pos.x, doc->pos.y, doc->selected.x, doc->selected.y};
+        get_selected_coordinates(&c);
+        if ((y == c.ay && c.ay == c.by && x >= c.ax && x <= c.bx) ||
+            (c.ay != c.by && ((y > c.ay && y < c.by) || (y == c.ay && x >= c.ax) || (y == c.by && x <= c.bx)))) {
           bg = BACKGROUND_GRAY;
         }
       }
@@ -147,7 +147,7 @@ void render_buf(struct Context *ctx, struct Document *doc, struct Cell **frame) 
       struct Token *token = &tokens_line->buf[j];
       enum ForegroundColor fg = get_token_foreground(token->group);
       for (int k = token->start; k < token->start + token->len; k++) {
-        int x = k - doc->offsetX;
+        int x = k - doc->offset.x;
         if (x < 0) continue;
         frame[i + offsetY][x + offsetX].fg = fg;
       }
@@ -211,6 +211,6 @@ void render(struct Context *ctx) {
   } else {
     int offsetX = get_line_number_margin(ctx);
     int offsetY = get_tabmenu_margin(ctx);
-    move_cursor_yx(doc->y - doc->offsetY + offsetY, doc->x - doc->offsetX + offsetX);
+    move_cursor_yx(doc->pos.y - doc->offset.y + offsetY, doc->pos.x - doc->offset.x + offsetX);
   }
 }

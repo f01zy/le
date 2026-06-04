@@ -9,52 +9,19 @@
 
 #include "defines.h"
 
-enum StatusMode { STATUS_MODE_NORMAL, STATUS_MODE_COMMAND, STATUS_MODE_MESSAGE, STATUS_MODE_DIALOG };
-enum RemoveResult { REMOVE_NOTHING, REMOVE_CHAR, REMOVE_LINE };
-enum MessageLevel { MESSAGE_INFO, MESSAGE_WARNING, MESSAGE_ERROR };
+struct Context;
 
-enum CursorStyle {
-  CURSOR_BLOCK_BLINKING = 1,
-  CURSOR_BLOCK_STATIC = 2,
-  CURSOR_UNDERLINE_BLINKING = 3,
-  CURSOR_UNDERLINE_STATIC = 4,
-  CURSOR_LINE_BLINKING = 5,
-  CURSOR_LINE_STATIC = 6,
+enum StatusMode {
+  STATUS_MODE_NORMAL,
+  STATUS_MODE_COMMAND,
+  STATUS_MODE_MESSAGE,
+  STATUS_MODE_DIALOG,
 };
 
-enum RenderMode {
-  RENDER_DEFAULT,
-  RENDER_BOLD,
-  RENDER_DIM,
-  RENDER_ITALIC,
-  RENDER_UNDERLINE,
-  RENDER_BLINKING,
-  RENDER_INVERSE,
-  RENDER_HIDDEN,
-  RENDER_STRIKETHROUGH,
-};
-
-enum ForegroundColor {
-  FOREGROUND_BLACK = 0,
-  FOREGROUND_RED = 1,
-  FOREGROUND_GREEN = 2,
-  FOREGROUND_YELLOW = 3,
-  FOREGROUND_BLUE = 4,
-  FOREGROUND_MAGENTA = 5,
-  FOREGROUND_CYAN = 6,
-  FOREGROUND_WHITE = 7,
-};
-
-enum BackgroundColor {
-  BACKGROUND_BLACK = 0,
-  BACKGROUND_RED = 1,
-  BACKGROUND_GREEN = 2,
-  BACKGROUND_YELLOW = 3,
-  BACKGROUND_BLUE = 4,
-  BACKGROUND_MAGENTA = 5,
-  BACKGROUND_CYAN = 6,
-  BACKGROUND_WHITE = 7,
-  BACKGROUND_GRAY = 8,
+enum MessageLevel {
+  MESSAGE_INFO,
+  MESSAGE_WARNING,
+  MESSAGE_ERROR,
 };
 
 enum TokenGroup {
@@ -76,7 +43,14 @@ enum EditorMode {
   EDITOR_MODE_VISUAL,
 };
 
-struct Context;
+struct Vec2 {
+  int x, y;
+};
+
+struct Vec4 {
+  int ax, ay;
+  int bx, by;
+};
 
 struct Token {
   enum TokenGroup group;
@@ -102,6 +76,22 @@ struct Tokens {
   size_t len;
 };
 
+struct Line {
+  char *buf;
+  size_t len, size;
+};
+
+struct Document {
+  char *path;
+  bool is_changed;
+  size_t len, size;
+  struct Vec2 pos;
+  struct Vec2 offset;
+  struct Vec2 selected;
+  struct Line **buf;
+  struct Tokens tokens;
+};
+
 struct UI {
   bool is_line_numbers;
   bool is_relative_line_numbers;
@@ -109,29 +99,6 @@ struct UI {
   bool is_tabmenu;
   bool is_mappings_menu;
   bool is_code_highlighting;
-};
-
-struct Line {
-  char *buf;
-  size_t len, size;
-};
-
-struct Cell {
-  char ch;
-  enum RenderMode mode;
-  enum ForegroundColor fg;
-  enum BackgroundColor bg;
-};
-
-struct Document {
-  int x, y;
-  int offsetX, offsetY;
-  int selectedX, selectedY;
-  char *path;
-  bool is_changed;
-  size_t len, size;
-  struct Line **buf;
-  struct Tokens tokens;
 };
 
 struct StatusLine {
@@ -152,6 +119,14 @@ struct StatusLine {
     char buf[MAX_STRING_BUFFER_SIZE];
     size_t len;
   } cmd;
+};
+
+struct MappingNode {
+  int ch;
+  const char *desc;
+  void (*act)(struct Context *ctx);
+  struct MappingNode **nodes;
+  size_t len;
 };
 
 struct Context {
@@ -175,39 +150,12 @@ struct Context {
   } frame;
 
   struct {
+    bool is_dinamic_mapping;
     struct MappingNode *curr_mapping;
     struct MappingNode *head_mapping;
     char buf[MAX_STRING_BUFFER_SIZE];
     size_t len;
   } mapping;
-};
-
-struct MappingNode {
-  int ch;
-  const char *desc;
-  void (*act)(struct Context *ctx);
-  struct MappingNode **nodes;
-  size_t len;
-};
-
-struct Mapping {
-  const char *cmd;
-  const char *desc;
-  void (*act)(struct Context *ctx);
-};
-
-struct Command {
-  const char *cmd;
-  void (*act)(struct Context *ctx, char *token);
-};
-
-struct ParsedCommand {
-  size_t global_cound;
-  char op;
-  size_t op_count;
-  char modifier;
-  char motion_object;
-  char extra_char;
 };
 
 #endif

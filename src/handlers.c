@@ -7,6 +7,7 @@ void handle_normal_mode(struct Context *ctx, int ch) {
     ctx->mapping.buf[ctx->mapping.len++] = ch;
     ctx->mapping.buf[ctx->mapping.len] = '\0';
   }
+  if (ctx->mapping.is_dinamic_mapping) return;
   bool is_found = false;
   for (int i = 0; i < ctx->mapping.curr_mapping->len; i++) {
     struct MappingNode *node = ctx->mapping.curr_mapping->nodes[i];
@@ -17,7 +18,7 @@ void handle_normal_mode(struct Context *ctx, int ch) {
     }
   }
   if (!ctx->mapping.curr_mapping->len) exec_curr_mapping(ctx);
-  if (!is_found) exec_dinamic_mapping(ctx);
+  if (!is_found) ctx->mapping.is_dinamic_mapping = true;
 }
 
 void handle_insert_mode(struct Context *ctx, int ch) {
@@ -27,25 +28,25 @@ void handle_insert_mode(struct Context *ctx, int ch) {
   switch (ch) {
   case KEY_ENTER:
     line_break(doc);
-    doc->y++;
-    doc->x = 0;
+    doc->pos.y++;
+    doc->pos.x = 0;
     break;
 
   case KEY_BACKSPACE:;
-    int temp = doc->y > 0 ? doc->buf[doc->y - 1]->len : 0;
-    enum RemoveResult res = remove_from_line(doc, doc->y, doc->x);
+    int temp = doc->pos.y > 0 ? doc->buf[doc->pos.y - 1]->len : 0;
+    enum RemoveResult res = remove_from_line(doc, doc->pos.y, doc->pos.x);
     if (res == REMOVE_CHAR) {
-      doc->x--;
+      doc->pos.x--;
     } else if (res == REMOVE_LINE) {
-      doc->x = temp;
-      doc->y--;
+      doc->pos.x = temp;
+      doc->pos.y--;
     }
     break;
 
   default:
     if (ch >= 32 && ch <= 126) {
-      write_to_line(doc, doc->y, doc->x, ch);
-      doc->x++;
+      write_to_line(doc, doc->pos.y, doc->pos.x, ch);
+      doc->pos.x++;
     }
     break;
   }

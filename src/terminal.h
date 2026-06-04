@@ -2,6 +2,7 @@
 #define TERMINAL_INCLUDED
 
 #include "types.h"
+#include "ui.h"
 
 void set_cursor_style(enum CursorStyle type);
 void set_render_mode(enum RenderMode render_mode, enum ForegroundColor fg, enum BackgroundColor bg);

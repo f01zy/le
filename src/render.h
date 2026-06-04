@@ -3,8 +3,16 @@
 
 #include "lexer.h"
 #include "path.h"
+#include "selected.h"
 #include "terminal.h"
 #include "ui.h"
+
+struct Cell {
+  char ch;
+  enum RenderMode mode;
+  enum ForegroundColor fg;
+  enum BackgroundColor bg;
+};
 
 void render_line(struct Context *ctx, struct Cell *buf, size_t len, int y);
 void render_tabmenu(struct Context *ctx, struct Cell **frame);

@@ -3,6 +3,12 @@
 
 #include "service.h"
 
+struct Mapping {
+  const char *cmd;
+  const char *desc;
+  void (*act)(struct Context *ctx);
+};
+
 #define COMMANDS_LIST                                                                                                                                          \
   X(toggle_mappings_menu, "Toggle mappings menu", " ")                                                                                                         \
   X(toggle_code_highlighting, "Toggle code highlighting", " h")                                                                                                \
@@ -23,9 +29,10 @@
   X(insert_mode_prev, "Enable insert mode", "i")                                                                                                               \
   X(insert_mode_next, "Enable insert mode", "a")                                                                                                               \
   X(command_mode, "Enable command mode", ":")                                                                                                                  \
-  X(visual_mode, "Enable visual mode", "v")                                                                                                                    \
-  X(yank, "Yank selected text", "y")                                                                                                                           \
-  X(delete, "Delete selected text", "d")
+  X(visual_mode, "Enable visual mode", "v")
+
+// X(yank, "Yank selected text", "y")
+// X(delete, "Delete selected text", "d")
 
 #define X(name, desc, mapping) void cmd_##name(struct Context *ctx);
 COMMANDS_LIST

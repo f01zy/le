@@ -61,13 +61,3 @@ const char *get_editor_mode_label(struct Context *ctx) {
     break;
   }
 }
-
-void get_selected_coordinates(int *ay, int *ax, int *by, int *bx) {
-  int is_single_line = (*ay == *by);
-  int minY = (*ay > *by) ? *by : *ay;
-  int maxY = (*ay > *by) ? *ay : *by;
-  int minX = is_single_line ? MIN(*ax, *bx) : ((*ay > *by) ? *bx : *ax);
-  int maxX = is_single_line ? MAX(*ax, *bx) : ((*ay > *by) ? *ax : *bx);
-  *ay = minY, *ax = minX;
-  *by = maxY, *bx = maxX;
-}

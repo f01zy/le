@@ -22,13 +22,19 @@ int main(int argc, char **argv) {
     ch = getchar_nonblock(20);
 
     if (ch == KEY_ESCAPE) {
-      if (doc->x) doc->x--;
+      if (doc->pos.x) doc->pos.x--;
       reset_curr_mapping(&ctx);
       set_editor_mode(&ctx, EDITOR_MODE_NORMAL);
       set_statusline_mode(&ctx, STATUS_MODE_NORMAL);
       clear_cmd(&ctx);
     }
-    if (!ctx.ui.is_mappings_menu && delta > 200000) exec_curr_mapping(&ctx);
+    if (!ctx.ui.is_mappings_menu && ctx.mapping.len && delta > 200000) {
+      if (ctx.mapping.is_dinamic_mapping) {
+        exec_dinamic_mapping(&ctx);
+      } else {
+        exec_curr_mapping(&ctx);
+      }
+    }
     if (ch != -1) {
       ctx.frame.prev_frame_time = now;
       switch (ctx.mode) {

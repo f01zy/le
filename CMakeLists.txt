@@ -20,6 +20,7 @@ set(SOURCE
   ./src/mappings.c
   ./src/lexer.c
   ./src/path.c
+  ./src/selected.c
 )
 
 add_executable(le ${SOURCE})

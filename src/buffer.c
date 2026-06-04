@@ -117,38 +117,37 @@ enum RemoveResult remove_from_line(struct Document *doc, int y, int x) {
   return REMOVE_LINE;
 }
 
-void remove_range(struct Document *doc, int ay, int ax, int by, int bx) {
-  get_selected_coordinates(&ay, &ax, &by, &bx);
-  if (ay >= doc->len || by >= doc->len) return;
-  struct Line *first = doc->buf[ay], *last = doc->buf[by];
-  if (ax > first->len || bx > last->len) return;
-  int remainder = last->len - bx - 1;
-  if (remainder < 0) remainder = 0;
-  size_t len = ax + remainder;
+void remove_range(struct Document *doc, struct Vec4 c) {
+  get_selected_coordinates(&c);
+  if (c.ay >= doc->len || c.by >= doc->len) return;
+  struct Line *first = doc->buf[c.ay], *last = doc->buf[c.by];
+  if (c.ax > first->len || c.bx > last->len) return;
+  int remainder = MAX(last->len - c.bx - 1, 0);
+  size_t len = c.ax + remainder;
   if (first->size - 1 < len) {
     first->size = len + ADDITIONAL_REALLOCATION;
     first->buf = (char *)xrealloc(first->buf, first->size);
   }
-  if (remainder) memcpy(first->buf + ax, last->buf + bx + 1, remainder);
+  if (remainder) memcpy(first->buf + c.ax, last->buf + c.bx + 1, remainder);
   first->len = len;
   first->buf[len] = '\0';
-  int lines_to_remove = by - ay;
+  int lines_to_remove = c.by - c.ay;
   for (int i = 0; i < lines_to_remove; i++) {
-    remove_line(doc, ay + 1);
+    remove_line(doc, c.ay + 1);
   }
 }
 
 void line_break(struct Document *doc) {
-  add_line(doc, NULL, doc->y + 1);
-  struct Line *line = doc->buf[doc->y];
-  struct Line *next = doc->buf[doc->y + 1];
-  int diff = line->len - doc->x;
+  add_line(doc, NULL, doc->pos.y + 1);
+  struct Line *line = doc->buf[doc->pos.y];
+  struct Line *next = doc->buf[doc->pos.y + 1];
+  int diff = line->len - doc->pos.x;
   if (diff > 0) {
     next->size = diff + 1;
     next->buf = (char *)xrealloc(next->buf, next->size);
     next->len = diff;
-    memcpy(next->buf, line->buf + doc->x, diff);
-    line->len = doc->x;
+    memcpy(next->buf, line->buf + doc->pos.x, diff);
+    line->len = doc->pos.x;
     line->buf[line->len] = next->buf[next->len] = '\0';
   }
 }

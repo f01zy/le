@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -84,16 +85,16 @@ void check_offset(struct Context *ctx, struct Document *doc) {
   int width = get_buffer_width(ctx);
   int height = get_buffer_height(ctx);
 
-  if (doc->x < doc->offsetX) {
-    doc->offsetX = doc->x;
-  } else if (doc->x >= doc->offsetX + width) {
-    doc->offsetX = doc->x - width + 1;
+  if (doc->pos.x < doc->offset.x) {
+    doc->offset.x = doc->pos.x;
+  } else if (doc->pos.x >= doc->offset.x + width) {
+    doc->offset.x = doc->pos.x - width + 1;
   }
 
-  if (doc->y < doc->offsetY) {
-    doc->offsetY = doc->y;
-  } else if (doc->y >= doc->offsetY + height) {
-    doc->offsetY = doc->y - height + 1;
+  if (doc->pos.y < doc->offset.y) {
+    doc->offset.y = doc->pos.y;
+  } else if (doc->pos.y >= doc->offset.y + height) {
+    doc->offset.y = doc->pos.y - height + 1;
   }
 }
 
@@ -126,6 +127,7 @@ int getchar_nonblock(int ms) {
 
 void reset_curr_mapping(struct Context *ctx) {
   ctx->ui.is_mappings_menu = false;
+  ctx->mapping.is_dinamic_mapping = false;
   ctx->mapping.curr_mapping = ctx->mapping.head_mapping;
   ctx->mapping.buf[0] = '\0';
   ctx->mapping.len = 0;
@@ -158,9 +160,79 @@ void unsaved_changes_dialog(struct Context *ctx, void (*on_confirm)(struct Conte
   set_statusline_dialog(ctx, "You have unsaved changes. Are you sure (Y/N): ", on_confirm, NULL);
 }
 
+struct ParsedMapping parse_dinamic_mapping(char *buf, size_t len) {
+  enum ParseMappingState state = STATE_WAITING_GLOBAL_COUNT;
+  struct ParsedMapping mapping;
+  size_t curr = 0;
+  char temp[MAX_STRING_BUFFER_SIZE];
+  for (int i = 0; i < len; i++) {
+    char ch = buf[i];
+    bool is_finished = false;
+    if (curr >= sizeof(temp)) break;
+    switch (state) {
+    case STATE_WAITING_GLOBAL_COUNT:
+    case STATE_WAITING_OPERATOR_COUNT:
+      if (isdigit(ch)) {
+        temp[curr++] = ch;
+        break;
+      }
+      int64_t count = MAX(string_to_number(temp, curr), 1);
+      if (state == STATE_WAITING_GLOBAL_COUNT) {
+        mapping.global_count = count;
+        state = STATE_WAITING_OPERATOR;
+      } else {
+        mapping.op_count = count;
+        state = STATE_WAITING_MODIFIER;
+      }
+      curr = 0;
+      i--;
+      break;
+    case STATE_WAITING_OPERATOR:
+      mapping.op = ch;
+      if (i < len - 1 && buf[i + 1] == ch) {
+        mapping.motion_object = ch;
+        is_finished = true;
+        break;
+      }
+      state = STATE_WAITING_OPERATOR_COUNT;
+      break;
+    case STATE_WAITING_MODIFIER:
+      mapping.modifier = ch;
+      state = STATE_WAITING_MOTION_OBJECT;
+      break;
+    case STATE_WAITING_MOTION_OBJECT:
+      mapping.motion_object = ch;
+      is_finished = true;
+      break;
+    }
+    if (is_finished) break;
+  }
+  return mapping;
+}
+
+struct Vec4 get_motion_object_bounds(struct Document *doc, struct ParsedMapping mapping) {
+  switch (mapping.motion_object) {
+  case 'd':
+    if (mapping.op == 'd') return (struct Vec4){0, doc->pos.y, doc->buf[doc->pos.y]->len - 1, doc->pos.y};
+    return (struct Vec4){-1};
+
+  default:
+    return (struct Vec4){-1};
+  }
+}
+
 void copy_to_clipboard(const char *data) {
+  if (!data) return;
 #ifdef WIN32
-// TODO: копирование на винде
+#include <windows.h>
+  size_t len = strlen(data);
+  HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len);
+  memcpy(GlobalLock(hMem), data, len);
+  GlobalUnlock(hMem);
+  OpenClipboard(0);
+  EmptyClipboard();
+  SetClipboardData(CF_TEXT, hMem);
+  CloseClipboard();
 #else
   FILE *pipe = popen("xclip -selection clipboard", "w");
   if (pipe) {
@@ -168,6 +240,16 @@ void copy_to_clipboard(const char *data) {
     pclose(pipe);
   }
 #endif
+}
+
+int64_t string_to_number(const char *buf, size_t len) {
+  if (!buf || !len) return -1;
+  int64_t ans = 0;
+  for (int i = 0; i < len; i++) {
+    if (!isdigit(buf[i])) return -1;
+    ans = ans * 10 + buf[i] - '0';
+  }
+  return ans;
 }
 
 void set_statusline_mode(struct Context *ctx, enum StatusMode mode) { ctx->status.mode = mode; }

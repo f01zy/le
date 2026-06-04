@@ -42,8 +42,8 @@ void command_open(struct Context *ctx, char *token) {
   if (!is_opened) {
     set_statusline_message(ctx, "Failed to open file", MESSAGE_ERROR);
   } else {
-    doc->offsetX = doc->offsetY = 0;
-    doc->x = doc->y = 0;
+    doc->offset.x = doc->offset.y = 0;
+    doc->pos.x = doc->pos.y = 0;
   }
 }
 

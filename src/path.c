@@ -30,6 +30,7 @@ void get_real_path(const char *path, size_t len, char *out, size_t max_size) {
       if (top < height) stack[top++] = buf;
     }
   }
+  // TODO: доделать под винду
   int curr = 0;
   for (int i = 0; i < top; i++) {
     char temp[MAX_BUFFER_SIZE];

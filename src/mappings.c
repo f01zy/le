@@ -1,6 +1,9 @@
-#include "mappings.h"
-#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
+#include "defines.h"
+#include "mappings.h"
 
 static struct Mapping mappings_list[] = {
 #define X(name, desc, mapping) {mapping, desc, cmd_##name},
@@ -11,63 +14,63 @@ static struct Mapping mappings_list[] = {
 // Movement
 void cmd_up(struct Context *ctx) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  if (!doc->y) return;
-  doc->x = MIN(doc->x, get_max_x(doc->buf[doc->y - 1]));
-  doc->y--;
+  if (!doc->pos.y) return;
+  doc->pos.x = MIN(doc->pos.x, get_max_x(doc->buf[doc->pos.y - 1]));
+  doc->pos.y--;
 }
 
 void cmd_down(struct Context *ctx) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  if (doc->y == doc->len - 1) return;
-  doc->x = MIN(doc->x, get_max_x(doc->buf[doc->y + 1]));
-  doc->y++;
+  if (doc->pos.y == doc->len - 1) return;
+  doc->pos.x = MIN(doc->pos.x, get_max_x(doc->buf[doc->pos.y + 1]));
+  doc->pos.y++;
 }
 
 void cmd_left(struct Context *ctx) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  if (!doc->x && !doc->y) return;
-  if (!doc->x) {
-    doc->x = get_max_x(doc->buf[doc->y - 1]);
-    doc->y--;
+  if (!doc->pos.x && !doc->pos.y) return;
+  if (!doc->pos.x) {
+    doc->pos.x = get_max_x(doc->buf[doc->pos.y - 1]);
+    doc->pos.y--;
   } else {
-    doc->x--;
+    doc->pos.x--;
   }
 }
 
 void cmd_right(struct Context *ctx) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  size_t len = get_max_x(doc->buf[doc->y]);
-  if (doc->x == len && doc->y == doc->len - 1) return;
-  if (doc->x == len) {
-    doc->x = 0;
-    doc->y++;
+  size_t len = get_max_x(doc->buf[doc->pos.y]);
+  if (doc->pos.x == len && doc->pos.y == doc->len - 1) return;
+  if (doc->pos.x == len) {
+    doc->pos.x = 0;
+    doc->pos.y++;
   } else {
-    doc->x++;
+    doc->pos.x++;
   }
 }
 
 // Lines
 void cmd_line_start(struct Context *ctx) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  doc->x = 0;
+  doc->pos.x = 0;
 }
 
 void cmd_line_end(struct Context *ctx) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  doc->x = get_max_x(doc->buf[doc->y]);
+  doc->pos.x = get_max_x(doc->buf[doc->pos.y]);
 }
 
 // Documents
 void cmd_doc_start(struct Context *ctx) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  doc->x = MIN(doc->x, get_max_x(doc->buf[0]));
-  doc->y = 0;
+  doc->pos.x = MIN(doc->pos.x, get_max_x(doc->buf[0]));
+  doc->pos.y = 0;
 }
 
 void cmd_doc_end(struct Context *ctx) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  doc->x = MIN(doc->x, get_max_x(doc->buf[doc->len - 1]));
-  doc->y = doc->len - 1;
+  doc->pos.x = MIN(doc->pos.x, get_max_x(doc->buf[doc->len - 1]));
+  doc->pos.y = doc->len - 1;
 }
 
 void cmd_doc_prev(struct Context *ctx) {
@@ -113,14 +116,14 @@ void cmd_insert_mode_prev(struct Context *ctx) { set_editor_mode(ctx, EDITOR_MOD
 
 void cmd_insert_mode_next(struct Context *ctx) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  if (doc->buf[doc->y]->len > 0) doc->x++;
+  if (doc->buf[doc->pos.y]->len > 0) doc->pos.x++;
   set_editor_mode(ctx, EDITOR_MODE_INSERT);
 }
 
 void cmd_visual_mode(struct Context *ctx) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  doc->selectedX = doc->x;
-  doc->selectedY = doc->y;
+  doc->selected.x = doc->pos.x;
+  doc->selected.y = doc->pos.y;
   set_editor_mode(ctx, EDITOR_MODE_VISUAL);
 }
 
@@ -134,34 +137,10 @@ void cmd_toggle_code_highlighting(struct Context *ctx) { ctx->ui.is_code_highlig
 void cmd_yank(struct Context *ctx) {
   if (ctx->mode != EDITOR_MODE_VISUAL) return;
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  int minY = doc->selectedY, minX = doc->selectedX, maxY = doc->y, maxX = doc->x;
-  get_selected_coordinates(&minY, &minX, &maxY, &maxX);
-  struct Line *first = doc->buf[minY], *last = doc->buf[maxY];
   char buf[MAX_BUFFER_SIZE];
-  int curr = 0;
-
-  if (minY != maxY) {
-    int first_len = first->len - minX, last_len = maxX + 1;
-    xmemcpy(buf, sizeof(buf) - 1, first->buf + minX, first_len);
-    curr += first_len;
-    buf[curr++] = '\n';
-    for (int i = minY + 1; i < maxY; i++) {
-      struct Line *line = doc->buf[i];
-      xmemcpy(buf + curr, sizeof(buf) - curr - 1, line->buf, line->len);
-      curr += line->len;
-      buf[curr++] = '\n';
-    }
-    xmemcpy(buf + curr, sizeof(buf) - curr - 1, last->buf, last_len);
-    curr += last_len;
-  } else {
-    size_t len = maxX - minX + 1;
-    xmemcpy(buf, sizeof(buf) - 1, first->buf + minX, len);
-    curr += len;
-  }
-
-  buf[curr] = '\0';
-  doc->x = MIN(doc->buf[doc->selectedY]->len - 1, doc->selectedX);
-  doc->y = doc->selectedY;
+  get_selected_buffer(doc, buf, sizeof(buf));
+  doc->pos.x = MIN(doc->buf[doc->selected.y]->len - 1, doc->selected.x);
+  doc->pos.y = doc->selected.y;
   copy_to_clipboard(buf);
   set_editor_mode(ctx, EDITOR_MODE_NORMAL);
 }
@@ -169,24 +148,27 @@ void cmd_yank(struct Context *ctx) {
 void cmd_delete(struct Context *ctx) {
   if (ctx->mode != EDITOR_MODE_VISUAL) return;
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  remove_range(doc, doc->selectedY, doc->selectedX, doc->y, doc->x);
-  doc->x = MIN(doc->buf[doc->selectedY]->len - 1, doc->selectedX);
-  doc->y = doc->selectedY;
+  remove_range(doc, (struct Vec4){doc->selected.x, doc->selected.y, doc->pos.x, doc->pos.y});
+  doc->pos.x = MIN(doc->buf[doc->selected.y]->len - 1, doc->selected.x);
+  doc->pos.y = doc->selected.y;
   set_editor_mode(ctx, EDITOR_MODE_NORMAL);
   init_tokens(doc);
 }
 
+// TODO: разделить построчное удаление для операторов движения и повторения от посимвольного удаления для прочих объектов
 void exec_dinamic_mapping(struct Context *ctx) {
-  struct ParsedCommand cmd;
-  char *buf = ctx->mapping.buf;
-  size_t len = ctx->mapping.len, curr = 0;
-
-  while (curr < len && isdigit(buf[curr])) {
-    curr++;
+  struct Document *doc = ctx->docs[ctx->curr_doc];
+  struct ParsedMapping mapping = parse_dinamic_mapping(ctx->mapping.buf, ctx->mapping.len);
+  struct Vec4 c = get_motion_object_bounds(doc, mapping);
+  if (c.ax == -1) {
+    reset_curr_mapping(ctx);
+    return;
   }
-
-  // TODO: доделать парсинг команды
-
+  switch (mapping.op) {
+  case 'd':
+    remove_range(doc, c);
+    break;
+  }
   reset_curr_mapping(ctx);
 }
 
