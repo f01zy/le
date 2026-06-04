@@ -31,6 +31,7 @@
 COMMANDS_LIST
 #undef X
 
+void exec_dinamic_mapping(struct Context *ctx);
 void add_mapping_node(struct Context *ctx, struct MappingNode *head, struct Mapping map);
 void init_mappings(struct Context *ctx);
 

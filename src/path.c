@@ -2,38 +2,41 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "defines.h"
 #include "path.h"
 
-// TODO: починить
 void get_real_path(const char *path, size_t len, char *out, size_t max_size) {
   char *stack[MAX_BUFFER_SIZE];
   int height = sizeof(stack) / sizeof(stack[0]);
   int top = 0;
   for (int i = 0; i < len; i++) {
     char *buf = (char *)xmalloc(MAX_BUFFER_SIZE);
-    int curr = 0;
-    int j = i;
+    int curr = 0, j = i;
     while (curr < MAX_BUFFER_SIZE - 1 && j < len && path[j] != '/') {
       buf[curr++] = path[j++];
     }
     buf[curr] = '\0';
-    if (i == j || !strcmp(buf, ".")) {
+    if (i == j) {
+      free(buf);
+      continue;
+    }
+    i = j;
+    if (!strcmp(buf, ".")) {
       free(buf);
     } else if (!strcmp(buf, "..")) {
-      if (top) top--;
+      if (top) free(stack[--top]);
       free(buf);
     } else {
       if (top < height) stack[top++] = buf;
     }
   }
   int curr = 0;
-  while (top) {
-    if (curr) {
-      curr += snprintf(out, max_size - 1, "%s", stack[--top]);
-    } else {
-      curr += snprintf(out, max_size - 1, "%s%c%s", out, PATH_SEPARATOR, stack[--top]);
-    }
-    free(stack[top]);
+  for (int i = 0; i < top; i++) {
+    char temp[MAX_BUFFER_SIZE];
+    size_t count = snprintf(temp, sizeof(temp), "%c%s", PATH_SEPARATOR, stack[i]);
+    xmemcpy(out + curr, max_size - curr - 1, temp, count);
+    curr += count;
+    free(stack[i]);
   }
   out[curr] = '\0';
 }

@@ -3,7 +3,7 @@
 int get_line_number_margin(struct Context *ctx) {
   if (!ctx->ui.is_line_numbers) return 0;
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  int len = doc->len, margin = 0;
+  size_t len = doc->len, margin = 0;
   while (len) {
     margin++;
     len /= 10;
@@ -21,8 +21,8 @@ int get_tabmenu_margin(struct Context *ctx) {
   return 1;
 }
 
-int get_buffer_width(struct Context *ctx) { return ctx->win.ws_col - get_line_number_margin(ctx); }
-int get_buffer_height(struct Context *ctx) { return ctx->win.ws_row - get_tabmenu_margin(ctx) - get_statusline_margin(ctx); }
+int get_buffer_width(struct Context *ctx) { return ctx->terminal.win.ws_col - get_line_number_margin(ctx); }
+int get_buffer_height(struct Context *ctx) { return ctx->terminal.win.ws_row - get_tabmenu_margin(ctx) - get_statusline_margin(ctx); }
 
 enum ForegroundColor get_token_foreground(enum TokenGroup group) {
   switch (group) {

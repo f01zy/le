@@ -26,7 +26,7 @@ int save_doc(struct Document *doc) {
   int size = 0;
   for (int i = 0; i < doc->len; i++) {
     struct Line *line = doc->buf[i];
-    int len = snprintf(buf, sizeof(buf), "%s\n", line->buf);
+    size_t len = snprintf(buf, sizeof(buf), "%s\n", line->buf);
     fwrite(buf, len, 1, file);
     size += len;
   }

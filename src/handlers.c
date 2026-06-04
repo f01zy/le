@@ -3,17 +3,21 @@
 
 void handle_normal_mode(struct Context *ctx, int ch) {
   set_statusline_mode(ctx, STATUS_MODE_NORMAL);
+  if (ctx->mapping.len < sizeof(ctx->mapping.buf)) {
+    ctx->mapping.buf[ctx->mapping.len++] = ch;
+    ctx->mapping.buf[ctx->mapping.len] = '\0';
+  }
   bool is_found = false;
-  for (int i = 0; i < ctx->curr_mapping->len; i++) {
-    struct MappingNode *node = ctx->curr_mapping->nodes[i];
+  for (int i = 0; i < ctx->mapping.curr_mapping->len; i++) {
+    struct MappingNode *node = ctx->mapping.curr_mapping->nodes[i];
     if (node->ch == ch) {
-      ctx->curr_mapping = node;
+      ctx->mapping.curr_mapping = node;
       is_found = true;
       break;
     }
   }
-  if (!ctx->curr_mapping->len) exec_curr_mapping(ctx);
-  if (!is_found) reset_curr_mapping(ctx);
+  if (!ctx->mapping.curr_mapping->len) exec_curr_mapping(ctx);
+  if (!is_found) exec_dinamic_mapping(ctx);
 }
 
 void handle_insert_mode(struct Context *ctx, int ch) {

@@ -1,4 +1,5 @@
 #include "mappings.h"
+#include <ctype.h>
 #include <string.h>
 
 static struct Mapping mappings_list[] = {
@@ -153,14 +154,14 @@ void cmd_yank(struct Context *ctx) {
     xmemcpy(buf + curr, sizeof(buf) - curr - 1, last->buf, last_len);
     curr += last_len;
   } else {
-    int len = maxX - minX + 1;
+    size_t len = maxX - minX + 1;
     xmemcpy(buf, sizeof(buf) - 1, first->buf + minX, len);
     curr += len;
   }
 
   buf[curr] = '\0';
+  doc->x = MIN(doc->buf[doc->selectedY]->len - 1, doc->selectedX);
   doc->y = doc->selectedY;
-  doc->x = doc->selectedX;
   copy_to_clipboard(buf);
   set_editor_mode(ctx, EDITOR_MODE_NORMAL);
 }
@@ -169,10 +170,24 @@ void cmd_delete(struct Context *ctx) {
   if (ctx->mode != EDITOR_MODE_VISUAL) return;
   struct Document *doc = ctx->docs[ctx->curr_doc];
   remove_range(doc, doc->selectedY, doc->selectedX, doc->y, doc->x);
+  doc->x = MIN(doc->buf[doc->selectedY]->len - 1, doc->selectedX);
   doc->y = doc->selectedY;
-  doc->x = doc->selectedX;
   set_editor_mode(ctx, EDITOR_MODE_NORMAL);
   init_tokens(doc);
+}
+
+void exec_dinamic_mapping(struct Context *ctx) {
+  struct ParsedCommand cmd;
+  char *buf = ctx->mapping.buf;
+  size_t len = ctx->mapping.len, curr = 0;
+
+  while (curr < len && isdigit(buf[curr])) {
+    curr++;
+  }
+
+  // TODO: доделать парсинг команды
+
+  reset_curr_mapping(ctx);
 }
 
 void add_mapping_node(struct Context *ctx, struct MappingNode *head, struct Mapping map) {
@@ -208,5 +223,5 @@ void init_mappings(struct Context *ctx) {
     struct Mapping map = mappings_list[i];
     add_mapping_node(ctx, head, map);
   }
-  ctx->head_mapping = ctx->curr_mapping = head;
+  ctx->mapping.head_mapping = ctx->mapping.curr_mapping = head;
 }

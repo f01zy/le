@@ -12,6 +12,7 @@ static struct Command commands_list[] = {
 void command_quit(struct Context *ctx, char *token) {
   for (int i = 0; i < ctx->len; i++) {
     if (ctx->docs[i]->is_changed) {
+      // TODO: добавить нормальную проверку наличия изменений
       unsaved_changes_dialog(ctx, set_flag_to_quit);
       return;
     }
@@ -48,12 +49,12 @@ void command_open(struct Context *ctx, char *token) {
 
 void command_unknown(struct Context *ctx, char *token) {
   char buf[MAX_BUFFER_SIZE];
-  int len = snprintf(buf, sizeof(buf), "Not an editor command: %s", token);
+  size_t len = snprintf(buf, sizeof(buf), "Not an editor command: %s", token);
   set_statusline_message(ctx, buf, MESSAGE_ERROR);
 }
 
 void handle_command(struct Context *ctx) {
-  int len = ctx->status.cmd.len;
+  size_t len = ctx->status.cmd.len;
   if (!len) return;
   char cmd[MAX_STRING_BUFFER_SIZE];
   memcpy(cmd, ctx->status.cmd.buf, sizeof(cmd));

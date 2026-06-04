@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "buffer.h"
+#include "defines.h"
 
 size_t get_max_x(struct Line *line) { return line->len ? line->len - 1 : 0; }
 
@@ -24,17 +25,21 @@ void set_doc_path(struct Document *doc, char *path) {
   char cwd[MAX_BUFFER_SIZE];
   if (!get_curr_dir(cwd, sizeof(cwd))) return;
   char buf[MAX_BUFFER_SIZE];
+
   bool is_absolute_path = false;
 #ifdef WIN32
   if (strlen(path) >= 3 && isalpha(path[0]) && path[1] == ':' && path[2] == PATH_SEPARATOR) is_absolute_path = true;
 #else
   if (path[0] == PATH_SEPARATOR) is_absolute_path = true;
 #endif
-  int len;
-  if (is_absolute_path) {
-    len = snprintf(buf, sizeof(buf), "%s", path);
+
+  size_t len;
+  if (!is_absolute_path) {
+    char dirty[MAX_BUFFER_SIZE];
+    len = snprintf(dirty, sizeof(dirty), "%s%c%s", cwd, PATH_SEPARATOR, path);
+    get_real_path(dirty, len, buf, sizeof(buf));
   } else {
-    len = snprintf(buf, sizeof(buf), "%s%c%s", cwd, PATH_SEPARATOR, path);
+    len = snprintf(buf, sizeof(buf), "%s", path);
   }
   doc->path = (char *)xmalloc(len + 1);
   memcpy(doc->path, buf, len);
@@ -54,7 +59,7 @@ void add_line(struct Document *doc, char *data, int y) {
   }
   memmove(&doc->buf[y + 1], &doc->buf[y], (doc->len - y) * sizeof(struct Line *));
   struct Line *line = (struct Line *)xmalloc(sizeof(struct Line));
-  int len = data ? strlen(data) : 0;
+  size_t len = data ? strlen(data) : 0;
   line->buf = (char *)xmalloc(len + 1);
   line->len = len;
   line->size = len + 1;
@@ -99,7 +104,7 @@ enum RemoveResult remove_from_line(struct Document *doc, int y, int x) {
   }
   struct Line *prev = doc->buf[y - 1];
   if (line->len > 0) {
-    int len = prev->len + line->len;
+    size_t len = prev->len + line->len;
     if (prev->size - 1 < line->len) {
       prev->size = len + ADDITIONAL_REALLOCATION;
       prev->buf = (char *)xrealloc(prev->buf, prev->size);
@@ -119,7 +124,7 @@ void remove_range(struct Document *doc, int ay, int ax, int by, int bx) {
   if (ax > first->len || bx > last->len) return;
   int remainder = last->len - bx - 1;
   if (remainder < 0) remainder = 0;
-  int len = ax + remainder;
+  size_t len = ax + remainder;
   if (first->size - 1 < len) {
     first->size = len + ADDITIONAL_REALLOCATION;
     first->buf = (char *)xrealloc(first->buf, first->size);

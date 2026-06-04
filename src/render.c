@@ -30,7 +30,8 @@ void render_line(struct Context *ctx, struct Cell *buf, size_t len, int y) {
 }
 
 void render_tabmenu(struct Context *ctx, struct Cell **frame) {
-  for (int i = 0; i < ctx->win.ws_col; i++) {
+  int col = ctx->terminal.win.ws_col, row = ctx->terminal.win.ws_row;
+  for (int i = 0; i < col; i++) {
     frame[0][i] = CELL(' ');
   }
   int max_len = 0;
@@ -38,12 +39,12 @@ void render_tabmenu(struct Context *ctx, struct Cell **frame) {
     const char *filename = get_file_name(ctx->docs[i]->path);
     max_len = MAX(max_len, strlen(filename));
   }
-  int max_docs_count = MAX(ctx->win.ws_col / max_len, 1);
+  int max_docs_count = MAX(col / max_len, 1);
   int offset = MAX((int)ctx->curr_doc - max_docs_count + 1, 0);
   for (int i = offset; i < offset + max_docs_count && i < ctx->len; i++) {
     enum RenderMode mode = i == ctx->curr_doc ? RENDER_DEFAULT : RENDER_DIM;
     const char *filename = get_file_name(ctx->docs[i]->path);
-    int len = strlen(filename);
+    size_t len = strlen(filename);
     int margin = (max_len - len) / 2;
     int tab_start_x = (i - offset) * max_len;
     for (int j = 0; j < len; j++) {
@@ -66,7 +67,7 @@ void render_line_numbers(struct Context *ctx, struct Document *doc, struct Cell 
     };
     enum RenderMode mode = doc->y == y ? RENDER_DEFAULT : RENDER_DIM;
     int num = (ctx->ui.is_relative_line_numbers && doc->y != y) ? abs(doc->y - y) : y + 1;
-    int len = snprintf(buf, sizeof(buf), "%d", num);
+    size_t len = snprintf(buf, sizeof(buf), "%d", num);
     for (int j = 0; j < len; j++) {
       frame[i + offsetY][j] = CELL_MODE(buf[j], mode);
     }
@@ -78,7 +79,9 @@ void render_line_numbers(struct Context *ctx, struct Document *doc, struct Cell 
 
 void render_statusline(struct Context *ctx, struct Document *doc, struct Cell **frame) {
   char buf[MAX_BUFFER_SIZE];
-  int len = 0, y = ctx->win.ws_row - 1;
+  size_t len = 0;
+  int col = ctx->terminal.win.ws_col, row = ctx->terminal.win.ws_row;
+  int y = row - 1;
   enum ForegroundColor fg = FOREGROUND_WHITE;
 
   switch (ctx->status.mode) {
@@ -102,7 +105,7 @@ void render_statusline(struct Context *ctx, struct Document *doc, struct Cell **
     break;
   }
 
-  for (int i = 0; i < ctx->win.ws_col; i++) {
+  for (int i = 0; i < col; i++) {
     frame[y][i] = i < len ? (struct Cell){buf[i], RENDER_DEFAULT, fg, BACKGROUND_BLACK} : CELL(' ');
   }
 }
@@ -153,56 +156,58 @@ void render_buf(struct Context *ctx, struct Document *doc, struct Cell **frame) 
 }
 
 void render_mappings_menu(struct Context *ctx, struct Document *doc, struct Cell **frame) {
-  struct MappingNode *node = ctx->curr_mapping;
+  int col = ctx->terminal.win.ws_col, row = ctx->terminal.win.ws_row;
+  struct MappingNode *node = ctx->mapping.curr_mapping;
   int offsetY = get_tabmenu_margin(ctx);
-  int startY = ctx->win.ws_row - offsetY - MAPPINGS_COL;
+  int startY = row - offsetY - MAPPINGS_COL;
   if (startY < 1) return;
   for (int i = startY - 1; i < startY + MAPPINGS_COL; i++) {
-    for (int j = 0; j < ctx->win.ws_col; j++) {
+    for (int j = 0; j < col; j++) {
       frame[i][j] = (struct Cell){' ', RENDER_DEFAULT, FOREGROUND_WHITE, BACKGROUND_GRAY};
     }
   }
   for (int i = 0; i < node->len; i++) {
     struct MappingNode *curr = node->nodes[i];
     char buf[MAX_BUFFER_SIZE];
-    int len = curr->desc ? snprintf(buf, sizeof(buf), "%c - %s", curr->ch, curr->desc) : snprintf(buf, sizeof(buf), "%c +%zu mappings", curr->ch, curr->len);
+    size_t len = curr->desc ? snprintf(buf, sizeof(buf), "%c - %s", curr->ch, curr->desc) : snprintf(buf, sizeof(buf), "%c +%zu mappings", curr->ch, curr->len);
     int offsetX = (i / MAPPINGS_COL) * MAPPINGS_COL_WIDTH + 2;
     for (int j = 0; j < len && j < MAPPINGS_COL_WIDTH; j++) {
       int x = offsetX + j;
       int y = startY + i % MAPPINGS_COL;
-      if (x >= ctx->win.ws_col) break;
+      if (x >= col) break;
       frame[y][x].ch = buf[j];
     }
   }
 }
 
 void render(struct Context *ctx) {
+  struct Cell **prev_frame = ctx->frame.prev_frame, **curr_frame = ctx->frame.curr_frame;
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  render_buf(ctx, doc, ctx->curr_frame);
-  if (ctx->ui.is_tabmenu) render_tabmenu(ctx, ctx->curr_frame);
-  if (ctx->ui.is_line_numbers) render_line_numbers(ctx, doc, ctx->curr_frame);
-  if (ctx->ui.is_statusline) render_statusline(ctx, doc, ctx->curr_frame);
-  if (ctx->ui.is_mappings_menu) render_mappings_menu(ctx, doc, ctx->curr_frame);
+  int col = ctx->terminal.win.ws_col, row = ctx->terminal.win.ws_row;
+  render_buf(ctx, doc, curr_frame);
+
+  if (ctx->ui.is_tabmenu) render_tabmenu(ctx, curr_frame);
+  if (ctx->ui.is_line_numbers) render_line_numbers(ctx, doc, curr_frame);
+  if (ctx->ui.is_statusline) render_statusline(ctx, doc, curr_frame);
+  if (ctx->ui.is_mappings_menu) render_mappings_menu(ctx, doc, curr_frame);
 
   ANSI_HIDE_CURSOR;
-  for (int i = 0; i < ctx->win.ws_row; i++) {
-    for (int j = 0; j < ctx->win.ws_col; j++) {
-      if (!ctx->prev_frame || memcmp(&ctx->curr_frame[i][j], &ctx->prev_frame[i][j], sizeof(ctx->curr_frame[i][j]))) {
-        render_line(ctx, ctx->curr_frame[i], ctx->win.ws_col, i);
+  for (int i = 0; i < row; i++) {
+    for (int j = 0; j < col; j++) {
+      if (!prev_frame || memcmp(&curr_frame[i][j], &prev_frame[i][j], sizeof(curr_frame[i][j]))) {
+        render_line(ctx, curr_frame[i], col, i);
         break;
       }
     }
   }
   ANSI_SHOW_CURSOR;
 
-  struct Cell **temp = ctx->prev_frame;
-  ctx->prev_frame = ctx->curr_frame;
-  ctx->curr_frame = temp;
-
+  ctx->frame.prev_frame = curr_frame;
+  ctx->frame.curr_frame = prev_frame;
   if (ctx->mode == EDITOR_MODE_COMMAND) {
-    move_cursor_yx(ctx->win.ws_row - 1, ctx->status.cmd.len + 1);
+    move_cursor_yx(row - 1, ctx->status.cmd.len + 1);
   } else if (ctx->mode == EDITOR_MODE_DIALOG) {
-    move_cursor_yx(ctx->win.ws_row - 1, strlen(ctx->status.dialog.buf));
+    move_cursor_yx(row - 1, strlen(ctx->status.dialog.buf));
   } else {
     int offsetX = get_line_number_margin(ctx);
     int offsetY = get_tabmenu_margin(ctx);

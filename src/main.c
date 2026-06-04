@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
     struct Document *doc = ctx.docs[ctx.curr_doc];
     struct timeval now;
     gettimeofday(&now, NULL);
-    __suseconds_t delta = (now.tv_sec - ctx.prev_frame_time.tv_sec) * 1000000LL + (now.tv_usec - ctx.prev_frame_time.tv_usec);
+    __suseconds_t delta = (now.tv_sec - ctx.frame.prev_frame_time.tv_sec) * 1000000LL + (now.tv_usec - ctx.frame.prev_frame_time.tv_usec);
     ch = getchar_nonblock(20);
 
     if (ch == KEY_ESCAPE) {
@@ -28,12 +28,9 @@ int main(int argc, char **argv) {
       set_statusline_mode(&ctx, STATUS_MODE_NORMAL);
       clear_cmd(&ctx);
     }
-    if (!ctx.ui.is_mappings_menu && delta > 200000) {
-      exec_curr_mapping(&ctx);
-      render(&ctx);
-    }
+    if (!ctx.ui.is_mappings_menu && delta > 200000) exec_curr_mapping(&ctx);
     if (ch != -1) {
-      ctx.prev_frame_time = now;
+      ctx.frame.prev_frame_time = now;
       switch (ctx.mode) {
       case EDITOR_MODE_INSERT:
         handle_insert_mode(&ctx, ch);
@@ -50,8 +47,8 @@ int main(int argc, char **argv) {
         break;
       }
       check_offset(&ctx, doc);
-      render(&ctx);
     }
+    render(&ctx);
   }
 
   quit_editor(&ctx);

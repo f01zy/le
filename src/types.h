@@ -9,6 +9,10 @@
 
 #include "defines.h"
 
+enum StatusMode { STATUS_MODE_NORMAL, STATUS_MODE_COMMAND, STATUS_MODE_MESSAGE, STATUS_MODE_DIALOG };
+enum RemoveResult { REMOVE_NOTHING, REMOVE_CHAR, REMOVE_LINE };
+enum MessageLevel { MESSAGE_INFO, MESSAGE_WARNING, MESSAGE_ERROR };
+
 enum CursorStyle {
   CURSOR_BLOCK_BLINKING = 1,
   CURSOR_BLOCK_STATIC = 2,
@@ -71,10 +75,6 @@ enum EditorMode {
   EDITOR_MODE_DIALOG,
   EDITOR_MODE_VISUAL,
 };
-
-enum StatusMode { STATUS_MODE_NORMAL, STATUS_MODE_COMMAND, STATUS_MODE_MESSAGE, STATUS_MODE_DIALOG };
-enum RemoveResult { REMOVE_NOTHING, REMOVE_CHAR, REMOVE_LINE };
-enum MessageLevel { MESSAGE_INFO, MESSAGE_WARNING, MESSAGE_ERROR };
 
 struct Context;
 
@@ -150,7 +150,7 @@ struct StatusLine {
 
   struct {
     char buf[MAX_STRING_BUFFER_SIZE];
-    int len;
+    size_t len;
   } cmd;
 };
 
@@ -158,17 +158,28 @@ struct Context {
   bool is_need_quit;
   size_t len, size, curr_doc;
   struct Document **docs;
-  struct MappingNode *curr_mapping;
-  struct MappingNode *head_mapping;
-  struct Cell **prev_frame;
-  struct Cell **curr_frame;
-  struct termios conf;
-  struct termios backup;
-  struct winsize win;
-  struct timeval prev_frame_time;
   struct StatusLine status;
   struct UI ui;
   enum EditorMode mode;
+
+  struct {
+    struct termios conf;
+    struct termios backup;
+    struct winsize win;
+  } terminal;
+
+  struct {
+    struct Cell **prev_frame;
+    struct Cell **curr_frame;
+    struct timeval prev_frame_time;
+  } frame;
+
+  struct {
+    struct MappingNode *curr_mapping;
+    struct MappingNode *head_mapping;
+    char buf[MAX_STRING_BUFFER_SIZE];
+    size_t len;
+  } mapping;
 };
 
 struct MappingNode {
@@ -188,6 +199,15 @@ struct Mapping {
 struct Command {
   const char *cmd;
   void (*act)(struct Context *ctx, char *token);
+};
+
+struct ParsedCommand {
+  size_t global_cound;
+  char op;
+  size_t op_count;
+  char modifier;
+  char motion_object;
+  char extra_char;
 };
 
 #endif
