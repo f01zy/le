@@ -1,21 +1,15 @@
-#include <stdio.h>
-
 #include "handlers.h"
 #include "mappings.h"
 
 struct Context ctx;
 
 int main(int argc, char **argv) {
-  if (argc > 2) {
-    printf("Invalid input data\n");
-    return 1;
-  }
   init_editor(&ctx);
   init_mappings(&ctx);
   struct Document *doc = create_doc(&ctx);
   if (argc == 2) {
     load_doc_data(doc, argv[1]);
-    init_highlightings(doc);
+    init_tokens(doc);
   }
   render(&ctx);
 

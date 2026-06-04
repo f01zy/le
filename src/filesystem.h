@@ -1,7 +1,8 @@
 #ifndef FILESYSTEM_INCLUDED
 #define FILESYSTEM_INCLUDED
 
-#include "service.h"
+#include "buffer.h"
+#include "path.h"
 
 bool load_doc_data(struct Document *doc, char *path);
 int save_doc(struct Document *doc);

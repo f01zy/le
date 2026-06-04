@@ -1,19 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 #include "buffer.h"
-
-void get_selected_coordinates(int *ay, int *ax, int *by, int *bx) {
-  int is_single_line = (*ay == *by);
-  int minY = (*ay > *by) ? *by : *ay;
-  int maxY = (*ay > *by) ? *ay : *by;
-  int minX = is_single_line ? MIN(*ax, *bx) : ((*ay > *by) ? *bx : *ax);
-  int maxX = is_single_line ? MAX(*ax, *bx) : ((*ay > *by) ? *ax : *bx);
-  *ay = minY, *ax = minX;
-  *by = maxY, *bx = maxX;
-}
 
 size_t get_max_x(struct Line *line) { return line->len ? line->len - 1 : 0; }
 
@@ -33,9 +22,20 @@ void set_doc_path(struct Document *doc, char *path) {
   if (!path) return;
   free(doc->path);
   char cwd[MAX_BUFFER_SIZE];
-  if (!getcwd(cwd, sizeof(cwd))) return;
+  if (!get_curr_dir(cwd, sizeof(cwd))) return;
   char buf[MAX_BUFFER_SIZE];
-  int len = path[0] == '/' ? snprintf(buf, sizeof(buf), "%s", path) : snprintf(buf, sizeof(buf), "%s/%s", cwd, path);
+  bool is_absolute_path = false;
+#ifdef WIN32
+  if (strlen(path) >= 3 && isalpha(path[0]) && path[1] == ':' && path[2] == PATH_SEPARATOR) is_absolute_path = true;
+#else
+  if (path[0] == PATH_SEPARATOR) is_absolute_path = true;
+#endif
+  int len;
+  if (is_absolute_path) {
+    len = snprintf(buf, sizeof(buf), "%s", path);
+  } else {
+    len = snprintf(buf, sizeof(buf), "%s%c%s", cwd, PATH_SEPARATOR, path);
+  }
   doc->path = (char *)xmalloc(len + 1);
   memcpy(doc->path, buf, len);
   doc->path[len] = '\0';

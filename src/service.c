@@ -112,13 +112,6 @@ struct Cell **create_frame(struct Context *ctx) {
   return frame;
 }
 
-const char *get_file_name(char *path) {
-  if (!path || path[0] == '\0') return "New buffer";
-  char *slash = strrchr(path, '/');
-  if (!slash) return path;
-  return slash + 1;
-}
-
 int getchar_nonblock(int ms) {
   struct pollfd pfd;
   pfd.fd = STDIN_FILENO;
@@ -160,44 +153,6 @@ void unsaved_changes_dialog(struct Context *ctx, void (*on_confirm)(struct Conte
   set_statusline_dialog(ctx, "You have unsaved changes. Are you sure (Y/N): ", on_confirm, NULL);
 }
 
-enum ForegroundColor get_token_foreground(enum TokenGroup group) {
-  switch (group) {
-  case TOKEN_LITERAL_STRING:
-    return FOREGROUND_YELLOW;
-
-  case TOKEN_LITERAL_NUMBER:
-  case TOKEN_DATA_TYPE:
-    return FOREGROUND_BLUE;
-
-  case TOKEN_LITERAL_SYMBOL:
-  case TOKEN_KEYWORD:
-    return FOREGROUND_MAGENTA;
-
-  case TOKEN_FUNCTION:
-  case TOKEN_DIRECTIVE:
-    return FOREGROUND_GREEN;
-
-  case TOKEN_DELIMITER:
-    return FOREGROUND_RED;
-
-  default:
-    return FOREGROUND_WHITE;
-  }
-}
-
-const char *get_editor_mode_label(struct Context *ctx) {
-  switch (ctx->mode) {
-  case EDITOR_MODE_INSERT:
-    return "INSERT";
-  case EDITOR_MODE_VISUAL:
-    return "VISUAL";
-    break;
-  default:
-    return "NORMAL";
-    break;
-  }
-}
-
 void copy_to_clipboard(const char *data) {
 #ifdef WIN32
 // TODO: копирование на винде
@@ -211,5 +166,5 @@ void copy_to_clipboard(const char *data) {
 }
 
 void set_statusline_mode(struct Context *ctx, enum StatusMode mode) { ctx->status.mode = mode; }
-void init_highlightings(struct Document *doc) { doc->tokens = scan_tokens(doc); }
+void init_tokens(struct Document *doc) { doc->tokens = scan_tokens(doc); }
 void set_flag_to_quit(struct Context *ctx) { ctx->is_need_quit = true; }

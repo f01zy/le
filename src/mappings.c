@@ -159,19 +159,20 @@ void cmd_yank(struct Context *ctx) {
   }
 
   buf[curr] = '\0';
+  doc->y = doc->selectedY;
+  doc->x = doc->selectedX;
   copy_to_clipboard(buf);
   set_editor_mode(ctx, EDITOR_MODE_NORMAL);
 }
 
 void cmd_delete(struct Context *ctx) {
-  if (ctx->mode == EDITOR_MODE_VISUAL) {
-    struct Document *doc = ctx->docs[ctx->curr_doc];
-    remove_range(doc, doc->selectedY, doc->selectedX, doc->y, doc->x);
-    doc->y = MIN(doc->y, doc->len - 1);
-    doc->x = MIN(doc->x, doc->buf[doc->y]->len);
-    set_editor_mode(ctx, EDITOR_MODE_NORMAL);
-    init_highlightings(doc);
-  }
+  if (ctx->mode != EDITOR_MODE_VISUAL) return;
+  struct Document *doc = ctx->docs[ctx->curr_doc];
+  remove_range(doc, doc->selectedY, doc->selectedX, doc->y, doc->x);
+  doc->y = doc->selectedY;
+  doc->x = doc->selectedX;
+  set_editor_mode(ctx, EDITOR_MODE_NORMAL);
+  init_tokens(doc);
 }
 
 void add_mapping_node(struct Context *ctx, struct MappingNode *head, struct Mapping map) {

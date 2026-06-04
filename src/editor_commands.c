@@ -2,7 +2,6 @@
 #include <string.h>
 
 #include "editor_commands.h"
-#include "service.h"
 
 static struct Command commands_list[] = {
     {"open", command_open},
@@ -42,10 +41,8 @@ void command_open(struct Context *ctx, char *token) {
   if (!is_opened) {
     set_statusline_message(ctx, "Failed to open file", MESSAGE_ERROR);
   } else {
-    doc->x = 0;
-    doc->y = 0;
-    doc->offsetX = 0;
-    doc->offsetY = 0;
+    doc->offsetX = doc->offsetY = 0;
+    doc->x = doc->y = 0;
   }
 }
 

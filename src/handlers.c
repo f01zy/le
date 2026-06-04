@@ -46,7 +46,7 @@ void handle_insert_mode(struct Context *ctx, int ch) {
     break;
   }
 
-  init_highlightings(doc);
+  init_tokens(doc);
 }
 
 void handle_command_mode(struct Context *ctx, char ch) {

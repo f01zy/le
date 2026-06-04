@@ -19,6 +19,7 @@ set(SOURCE
   ./src/editor_commands.c
   ./src/mappings.c
   ./src/lexer.c
+  ./src/path.c
 )
 
 add_executable(le ${SOURCE})

@@ -1,6 +1,16 @@
 #ifndef DEFINES_INCLUDED
 #define DEFINES_INCLUDED
 
+#ifdef WIN32
+#include <dirent.h>
+#define get_curr_dir   _getcwd
+#define PATH_SEPARATOR '\\'
+#else
+#include <unistd.h>
+#define get_curr_dir   getcwd
+#define PATH_SEPARATOR '/'
+#endif
+
 #define ADDITIONAL_REALLOCATION     16
 #define MAX_BUFFER_SIZE             8192
 #define MAPPINGS_COL                5
@@ -14,6 +24,8 @@
 #define ANSI_RESET_SCREEN           write(STDOUT_FILENO, "\x1b[2J", 4)
 #define ANSI_RESET_LINE_FROM_CURSOR write(STDOUT_FILENO, "\x1b[0K", 4)
 #define ANSI_RESET_LINE_TO_CURSOR   write(STDOUT_FILENO, "\x1b[0K", 4)
+#define ANSI_HIDE_CURSOR            write(STDOUT_FILENO, "\x1b[?25l", 6)
+#define ANSI_SHOW_CURSOR            write(STDOUT_FILENO, "\x1b[?25h", 6)
 #define ANSI_MOVE_CURSOR_YX         "\x1b[%d;%dH"
 #define ANSI_CURSOR_TYPE            "\x1b[%d q"
 #define ANSI_RENDER_MODE            "\x1b[%d;38;5;%d;48;5;%dm"

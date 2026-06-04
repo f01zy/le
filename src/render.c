@@ -7,7 +7,6 @@
 
 void render_line(struct Context *ctx, struct Cell *buf, size_t len, int y) {
   move_cursor_yx(y, 0);
-  ANSI_RESET_LINE_FROM_CURSOR;
   enum RenderMode mode = buf[0].mode;
   enum ForegroundColor fg = buf[0].fg;
   enum BackgroundColor bg = buf[0].bg;
@@ -126,7 +125,6 @@ void render_buf(struct Context *ctx, struct Document *doc, struct Cell **frame) 
       int x = doc->offsetX + j;
       char ch = x < line->len ? line->buf[x] : ' ';
 
-      // Highlight selected text
       enum BackgroundColor bg = BACKGROUND_BLACK;
       if (ctx->mode == EDITOR_MODE_VISUAL) {
         int minY = doc->selectedY, minX = doc->selectedX, maxY = doc->y, maxX = doc->x;
@@ -140,17 +138,15 @@ void render_buf(struct Context *ctx, struct Document *doc, struct Cell **frame) 
       frame[i + offsetY][j + offsetX] = (struct Cell){ch, RENDER_DEFAULT, FOREGROUND_WHITE, bg};
     }
 
-    // Code highlighting
-    if (ctx->ui.is_code_highlighting && doc->tokens.buf) {
-      struct TokenLine *tokens_line = doc->tokens.buf[y];
-      for (int j = 0; j < tokens_line->len; j++) {
-        struct Token *token = &tokens_line->buf[j];
-        enum ForegroundColor fg = get_token_foreground(token->group);
-        for (int k = token->start; k < token->start + token->len; k++) {
-          int x = k - doc->offsetX;
-          if (x < 0) continue;
-          frame[i + offsetY][x + offsetX].fg = fg;
-        }
+    if (!(ctx->ui.is_code_highlighting && doc->tokens.buf)) continue;
+    struct TokenLine *tokens_line = doc->tokens.buf[y];
+    for (int j = 0; j < tokens_line->len; j++) {
+      struct Token *token = &tokens_line->buf[j];
+      enum ForegroundColor fg = get_token_foreground(token->group);
+      for (int k = token->start; k < token->start + token->len; k++) {
+        int x = k - doc->offsetX;
+        if (x < 0) continue;
+        frame[i + offsetY][x + offsetX].fg = fg;
       }
     }
   }
@@ -188,6 +184,7 @@ void render(struct Context *ctx) {
   if (ctx->ui.is_statusline) render_statusline(ctx, doc, ctx->curr_frame);
   if (ctx->ui.is_mappings_menu) render_mappings_menu(ctx, doc, ctx->curr_frame);
 
+  ANSI_HIDE_CURSOR;
   for (int i = 0; i < ctx->win.ws_row; i++) {
     for (int j = 0; j < ctx->win.ws_col; j++) {
       if (!ctx->prev_frame || memcmp(&ctx->curr_frame[i][j], &ctx->prev_frame[i][j], sizeof(ctx->curr_frame[i][j]))) {
@@ -196,6 +193,8 @@ void render(struct Context *ctx) {
       }
     }
   }
+  ANSI_SHOW_CURSOR;
+
   struct Cell **temp = ctx->prev_frame;
   ctx->prev_frame = ctx->curr_frame;
   ctx->curr_frame = temp;

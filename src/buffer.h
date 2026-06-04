@@ -2,11 +2,11 @@
 #define BUFFER_INCLUDED
 
 #include "memory.h"
+#include "path.h"
 #include "types.h"
+#include "ui.h"
 
-void get_selected_coordinates(int *ay, int *ax, int *by, int *bx);
 size_t get_max_x(struct Line *line);
-
 struct Document *create_doc(struct Context *ctx);
 void set_doc_path(struct Document *doc, char *path);
 void remove_doc_path(struct Document *doc);
