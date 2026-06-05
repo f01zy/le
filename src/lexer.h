@@ -4,8 +4,6 @@
 #include "memory.h"
 #include "types.h"
 
-bool is_alpha(char ch);
-bool is_alpha_numeric(char ch);
 bool is_at_end(struct Lexer *lexer);
 void free_tokens(struct Document *doc);
 void add_token(struct Lexer *lexer, enum TokenGroup type);

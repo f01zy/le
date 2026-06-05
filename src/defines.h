@@ -1,6 +1,8 @@
 #ifndef DEFINES_INCLUDED
 #define DEFINES_INCLUDED
 
+#include <ctype.h>
+
 #ifdef WIN32
 #include <dirent.h>
 #define get_curr_dir   _getcwd
@@ -31,6 +33,8 @@
 #define ANSI_RENDER_MODE            "\x1b[%d;38;5;%d;48;5;%dm"
 #define MIN(A, B)                   ((A) < (B) ? (A) : (B))
 #define MAX(A, B)                   ((A) > (B) ? (A) : (B))
+#define IS_ALPHA(A)                 (isalpha((unsigned char)(A)) || (A) == '_')
+#define IS_ALPHA_NUMERIC(A)         (isalpha((unsigned char)(A)) || (A) == '_' || isdigit(A))
 #define CELL(ch)                    ((struct Cell){(ch), RENDER_DEFAULT, FOREGROUND_WHITE, BACKGROUND_BLACK})
 #define CELL_MODE(ch, mode)         ((struct Cell){(ch), (mode), FOREGROUND_WHITE, BACKGROUND_BLACK})
 

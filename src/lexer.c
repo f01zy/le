@@ -1,4 +1,3 @@
-#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -79,7 +78,7 @@ void scan_token(struct Lexer *lexer) {
   default:
     if (isdigit(ch)) {
       scan_number_literal(lexer);
-    } else if (is_alpha(ch)) {
+    } else if (IS_ALPHA(ch)) {
       scan_identifier(lexer);
     }
   }
@@ -100,7 +99,7 @@ void scan_directive(struct Lexer *lexer) {
   while (peek(lexer) == ' ') {
     advance(lexer);
   }
-  while (is_alpha_numeric(peek(lexer))) {
+  while (IS_ALPHA_NUMERIC(peek(lexer))) {
     advance(lexer);
   }
   add_token(lexer, TOKEN_DIRECTIVE);
@@ -120,7 +119,7 @@ void scan_number_literal(struct Lexer *lexer) {
 }
 
 void scan_identifier(struct Lexer *lexer) {
-  while (is_alpha_numeric(peek(lexer))) {
+  while (IS_ALPHA_NUMERIC(peek(lexer))) {
     advance(lexer);
   }
   struct Line *line = lexer->doc->buf[lexer->line];
@@ -175,6 +174,4 @@ void free_tokens(struct Document *doc) {
   doc->tokens = (struct Tokens){NULL, 0};
 }
 
-bool is_alpha(char ch) { return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_'; }
-bool is_alpha_numeric(char ch) { return is_alpha(ch) || isdigit(ch); }
 bool is_at_end(struct Lexer *lexer) { return lexer->curr >= lexer->doc->buf[lexer->doc->len - 1]->len && lexer->line >= lexer->doc->len - 1; }
