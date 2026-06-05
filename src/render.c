@@ -5,7 +5,7 @@
 
 #include "render.h"
 
-void render_line(struct Context *ctx, struct Cell *buf, size_t len, int y) {
+void render_line(struct Cell *buf, size_t len, int y) {
   move_cursor_yx(y, 0);
   enum RenderMode mode = buf[0].mode;
   enum ForegroundColor fg = buf[0].fg;
@@ -53,9 +53,10 @@ void render_tabmenu(struct Context *ctx, struct Cell **frame) {
   }
 }
 
-void render_line_numbers(struct Context *ctx, struct Document *doc, struct Cell **frame) {
-  int width = get_line_number_margin(ctx), height = get_buffer_height(ctx);
-  int offsetY = get_tabmenu_margin(ctx);
+void render_line_numbers(struct Context *ctx, struct Cell **frame) {
+  struct Document *doc = ctx->docs[ctx->curr_doc];
+  int width = get_line_number_margin(ctx->ui, doc->len), height = get_buffer_height(ctx->ui, ctx->terminal.size);
+  int offsetY = get_tabmenu_margin(ctx->ui);
   char buf[MAX_BUFFER_SIZE];
   for (int i = 0; i < height; i++) {
     int y = doc->offset.y + i;
@@ -77,7 +78,8 @@ void render_line_numbers(struct Context *ctx, struct Document *doc, struct Cell 
   }
 }
 
-void render_statusline(struct Context *ctx, struct Document *doc, struct Cell **frame) {
+void render_statusline(struct Context *ctx, struct Cell **frame) {
+  struct Document *doc = ctx->docs[ctx->curr_doc];
   char buf[MAX_BUFFER_SIZE];
   size_t len = 0;
   int col = ctx->terminal.size.x, row = ctx->terminal.size.y;
@@ -92,7 +94,7 @@ void render_statusline(struct Context *ctx, struct Document *doc, struct Cell **
     break;
 
   case STATUS_MODE_NORMAL:;
-    const char *label = get_editor_mode_label(ctx);
+    const char *label = get_editor_mode_label(ctx->mode);
     len = snprintf(buf, sizeof(buf), "-- %s -- %d/%d %s", label, doc->pos.y + 1, doc->pos.x + 1, ctx->mapping.buf);
     break;
 
@@ -110,9 +112,10 @@ void render_statusline(struct Context *ctx, struct Document *doc, struct Cell **
   }
 }
 
-void render_buf(struct Context *ctx, struct Document *doc, struct Cell **frame) {
-  int offsetX = get_line_number_margin(ctx), offsetY = get_tabmenu_margin(ctx);
-  int width = get_buffer_width(ctx), height = get_buffer_height(ctx);
+void render_buf(struct Context *ctx, struct Cell **frame) {
+  struct Document *doc = ctx->docs[ctx->curr_doc];
+  int offsetX = get_line_number_margin(ctx->ui, doc->len), offsetY = get_tabmenu_margin(ctx->ui);
+  int width = get_buffer_width(ctx->ui, ctx->terminal.size, doc->len), height = get_buffer_height(ctx->ui, ctx->terminal.size);
 
   for (int i = 0; i < height; i++) {
     int y = i + doc->offset.y;
@@ -159,17 +162,17 @@ void render(struct Context *ctx) {
   struct Cell **prev_frame = ctx->frame.prev, **curr_frame = ctx->frame.curr;
   struct Document *doc = ctx->docs[ctx->curr_doc];
   int col = ctx->terminal.size.x, row = ctx->terminal.size.y;
-  render_buf(ctx, doc, curr_frame);
+  render_buf(ctx, curr_frame);
 
   if (ctx->ui.is_tabmenu) render_tabmenu(ctx, curr_frame);
-  if (ctx->ui.is_line_numbers) render_line_numbers(ctx, doc, curr_frame);
-  if (ctx->ui.is_statusline) render_statusline(ctx, doc, curr_frame);
+  if (ctx->ui.is_line_numbers) render_line_numbers(ctx, curr_frame);
+  if (ctx->ui.is_statusline) render_statusline(ctx, curr_frame);
 
   ANSI_HIDE_CURSOR;
   for (int i = 0; i < row; i++) {
     for (int j = 0; j < col; j++) {
       if (!prev_frame || memcmp(&curr_frame[i][j], &prev_frame[i][j], sizeof(curr_frame[i][j]))) {
-        render_line(ctx, curr_frame[i], col, i);
+        render_line(curr_frame[i], col, i);
         break;
       }
     }
@@ -183,8 +186,8 @@ void render(struct Context *ctx) {
   } else if (ctx->mode == EDITOR_MODE_DIALOG) {
     move_cursor_yx(row - 1, strlen(ctx->status.dialog.buf));
   } else {
-    int offsetX = get_line_number_margin(ctx);
-    int offsetY = get_tabmenu_margin(ctx);
+    int offsetX = get_line_number_margin(ctx->ui, doc->len);
+    int offsetY = get_tabmenu_margin(ctx->ui);
     move_cursor_yx(doc->pos.y - doc->offset.y + offsetY, doc->pos.x - doc->offset.x + offsetX);
   }
 }

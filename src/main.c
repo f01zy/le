@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
         handle_dialog_mode(&ctx, ch);
         break;
       }
-      check_offset(&ctx, doc);
+      check_offset(doc, ctx.ui, ctx.terminal.size);
     }
     render(&ctx);
   }

@@ -152,32 +152,9 @@ void cmd_toggle_line_numbers(struct Context *ctx) { ctx->ui.is_line_numbers = !c
 void cmd_toggle_relative_line_numbers(struct Context *ctx) { ctx->ui.is_relative_line_numbers = !ctx->ui.is_relative_line_numbers; }
 void cmd_toggle_code_highlighting(struct Context *ctx) { ctx->ui.is_code_highlighting = !ctx->ui.is_code_highlighting; }
 
-// Visual mode
-void cmd_yank(struct Context *ctx) {
-  if (ctx->mode != EDITOR_MODE_VISUAL) return;
-  struct Document *doc = ctx->docs[ctx->curr_doc];
-  char buf[MAX_BUFFER_SIZE];
-  get_selected_buffer(doc, buf, sizeof(buf));
-  doc->pos.x = MIN(doc->buf[doc->selected.y]->len - 1, doc->selected.x);
-  doc->pos.y = doc->selected.y;
-  copy_to_clipboard(buf);
-  set_editor_mode(ctx, EDITOR_MODE_NORMAL);
-}
-
-void cmd_delete(struct Context *ctx) {
-  if (ctx->mode != EDITOR_MODE_VISUAL) return;
-  struct Document *doc = ctx->docs[ctx->curr_doc];
-  remove_range(doc, (struct Vec4){doc->selected.x, doc->selected.y, doc->pos.x, doc->pos.y});
-  doc->pos.x = MIN(doc->buf[doc->selected.y]->len - 1, doc->selected.x);
-  doc->pos.y = doc->selected.y;
-  set_editor_mode(ctx, EDITOR_MODE_NORMAL);
-  init_tokens(doc);
-}
-
+// Other
 void exec_mapping(struct Context *ctx) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
-
-  // Try to execute static mapping
   struct MappingNode static_mapping;
   enum ParsingStatus static_status = parse_static_mapping(ctx, &static_mapping);
   if (static_status == PARSING_STATUS_WAITING) return;
@@ -187,11 +164,37 @@ void exec_mapping(struct Context *ctx) {
     return;
   }
 
-  // Try to execute dinamic mapping
   struct DinamicMapping dinamic_mapping;
-  if (parse_dinamic_mapping(&dinamic_mapping, ctx->mapping.buf, ctx->mapping.len) == PARSING_STATUS_ERROR) return;
+  if (parse_dinamic_mapping(ctx, &dinamic_mapping) == PARSING_STATUS_ERROR) return;
   struct Vec4 c = get_motion_object_bounds(doc, dinamic_mapping);
   size_t count = dinamic_mapping.global_count;
+
+  if (ctx->mode == EDITOR_MODE_VISUAL) {
+    struct Vec4 selected = {doc->pos.x, doc->pos.y, doc->selected.x, doc->selected.y};
+    switch (dinamic_mapping.op) {
+    case 'd': {
+      char buf[MAX_BUFFER_SIZE];
+      get_selected_buffer(doc, buf, sizeof(buf));
+      remove_range(doc, selected);
+      doc->pos.x = MIN(doc->buf[doc->selected.y]->len - 1, doc->selected.x);
+      doc->pos.y = doc->selected.y;
+      set_editor_mode(ctx, EDITOR_MODE_NORMAL);
+      copy_to_clipboard(buf);
+      init_tokens(doc);
+      break;
+    }
+
+    case 'y': {
+      char buf[MAX_BUFFER_SIZE];
+      get_selected_buffer(doc, buf, sizeof(buf));
+      doc->pos.x = MIN(doc->buf[doc->selected.y]->len - 1, doc->selected.x);
+      doc->pos.y = doc->selected.y;
+      copy_to_clipboard(buf);
+      set_editor_mode(ctx, EDITOR_MODE_NORMAL);
+      break;
+    }
+    }
+  }
 
   switch (dinamic_mapping.op) {
   case 'l':

@@ -23,11 +23,8 @@ struct Mapping {
   X(insert_mode_next, "Enable insert mode", "a")                                                                                                               \
   X(command_mode, "Enable command mode", ":")                                                                                                                  \
   X(visual_mode, "Enable visual mode", "v")                                                                                                                    \
-  X(yank, "Yank selected text", "y")                                                                                                                           \
   X(toggle_code_highlighting, "Toggle code highlighting", " h")                                                                                                \
   X(toggle_line_numbers, "Toggle line numbers", " n")
-
-// TODO: вернуть кеймап удаления выделенного текста. щас конфликт режимов редактора
 
 #define X(name, desc, mapping) void cmd_##name(struct Context *ctx);
 COMMANDS_LIST

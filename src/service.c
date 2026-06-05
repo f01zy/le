@@ -39,8 +39,8 @@ void init_context(struct Context *ctx) {
       .is_code_highlighting = true,
   };
   ctx->terminal.size = get_teminal_size();
-  ctx->frame.curr = create_frame(ctx);
-  ctx->frame.prev = create_frame(ctx);
+  ctx->frame.curr = create_frame(ctx->terminal.size);
+  ctx->frame.prev = create_frame(ctx->terminal.size);
   ctx->ui = ui;
   ctx->terminal.conf = ctx->terminal.backup;
   ctx->terminal.conf.c_iflag |= IXOFF;
@@ -55,9 +55,9 @@ void clear_cmd(struct Context *ctx) {
   ctx->status.cmd.len = 0;
 }
 
-void free_mappings(struct Context *ctx, struct MappingNode *node) {
+void free_mappings(struct MappingNode *node) {
   for (int i = 0; i < node->len; i++) {
-    free_mappings(ctx, node->nodes[i]);
+    free_mappings(node->nodes[i]);
   }
   free(node->nodes);
   free(node);
@@ -83,11 +83,12 @@ void free_resources(struct Context *ctx) {
   free(ctx->docs);
   free(prev_frame);
   free(curr_frame);
+  free_mappings(ctx->mapping.head);
 }
 
-void check_offset(struct Context *ctx, struct Document *doc) {
-  int width = get_buffer_width(ctx);
-  int height = get_buffer_height(ctx);
+void check_offset(struct Document *doc, struct UI ui, struct Vec2 size) {
+  int width = get_buffer_width(ui, size, doc->len);
+  int height = get_buffer_height(ui, size);
 
   if (doc->pos.x < doc->offset.x) {
     doc->offset.x = doc->pos.x;
@@ -111,11 +112,10 @@ void set_editor_mode(struct Context *ctx, enum EditorMode mode) {
   set_cursor_style(style);
 }
 
-struct Cell **create_frame(struct Context *ctx) {
-  int col = ctx->terminal.size.x, row = ctx->terminal.size.y;
-  struct Cell **frame = (struct Cell **)xmalloc(row * sizeof(struct Cell *));
-  for (int i = 0; i < row; i++) {
-    frame[i] = (struct Cell *)xcalloc(col, sizeof(struct Cell));
+struct Cell **create_frame(struct Vec2 size) {
+  struct Cell **frame = (struct Cell **)xmalloc(size.y * sizeof(struct Cell *));
+  for (int i = 0; i < size.y; i++) {
+    frame[i] = (struct Cell *)xcalloc(size.x, sizeof(struct Cell));
   }
   return frame;
 }
@@ -178,13 +178,13 @@ enum ParsingStatus parse_static_mapping(struct Context *ctx, struct MappingNode 
 static const char *motion_operators = "hjklwWeEbB";
 static const char *modifier_operators = "dyc";
 
-enum ParsingStatus parse_dinamic_mapping(struct DinamicMapping *mapping, char *buf, size_t len) {
+enum ParsingStatus parse_dinamic_mapping(struct Context *ctx, struct DinamicMapping *ans) {
   enum ParseDinamicMappingState state = STATE_MAPPING_GLOBAL_COUNT;
   size_t curr = 0;
   char temp[MAX_STRING_BUFFER_SIZE];
 
-  for (int i = 0; i < len; i++) {
-    char ch = buf[i];
+  for (int i = 0; i < ctx->mapping.len; i++) {
+    char ch = ctx->mapping.buf[i];
     if (curr >= sizeof(temp)) break;
     switch (state) {
     case STATE_MAPPING_GLOBAL_COUNT:
@@ -195,39 +195,44 @@ enum ParsingStatus parse_dinamic_mapping(struct DinamicMapping *mapping, char *b
       }
       int64_t count = MAX(string_to_number(temp, curr), 1);
       if (state == STATE_MAPPING_GLOBAL_COUNT) {
-        mapping->global_count = count;
+        ans->global_count = count;
         state = STATE_MAPPING_OPERATOR;
       } else {
-        mapping->op_count = count;
+        ans->op_count = count;
         state = STATE_MAPPING_MODIFIER;
       }
       curr = 0;
       i--;
       break;
     case STATE_MAPPING_OPERATOR:
-      mapping->op = ch;
+      ans->op = ch;
       for (int i = 0; i < strlen(motion_operators); i++) {
         if (motion_operators[i] == ch) return PARSING_STATUS_SUCCESS;
       }
       bool is_modifier_operator = false;
-      for (int i = 0; i < strlen(motion_operators); i++) {
-        if (motion_operators[i] == ch) {
+      for (int i = 0; i < strlen(modifier_operators); i++) {
+        if (modifier_operators[i] == ch) {
           is_modifier_operator = true;
           break;
         }
       }
-      state = is_modifier_operator ? STATE_MAPPING_MODIFIER : STATE_MAPPING_MOTION_OBJECT;
+      if (is_modifier_operator) {
+        if (ctx->mode == EDITOR_MODE_VISUAL) return PARSING_STATUS_SUCCESS;
+        state = STATE_MAPPING_MODIFIER;
+      } else {
+        state = STATE_MAPPING_MOTION_OBJECT;
+      }
       break;
     case STATE_MAPPING_MODIFIER:
       if (ch == 'i' || ch == 'a') {
-        mapping->modifier = ch;
+        ans->modifier = ch;
       } else {
         i--;
       }
       state = STATE_MAPPING_MOTION_OBJECT;
       break;
     case STATE_MAPPING_MOTION_OBJECT:
-      mapping->motion_object = ch;
+      ans->motion_object = ch;
       return PARSING_STATUS_SUCCESS;
     }
   }

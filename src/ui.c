@@ -1,28 +1,29 @@
 #include "ui.h"
 
-int get_line_number_margin(struct Context *ctx) {
-  if (!ctx->ui.is_line_numbers) return 0;
-  struct Document *doc = ctx->docs[ctx->curr_doc];
-  size_t len = doc->len, margin = 0;
-  while (len) {
+// TODO: вместо контекста можно передавать только UI и, если надо, документ
+
+int get_line_number_margin(struct UI ui, size_t doc_len) {
+  if (!ui.is_line_numbers) return 0;
+  int margin = 0;
+  while (doc_len) {
     margin++;
-    len /= 10;
+    doc_len /= 10;
   }
   return margin + 1;
 }
 
-int get_statusline_margin(struct Context *ctx) {
-  if (!ctx->ui.is_statusline) return 0;
+int get_statusline_margin(struct UI ui) {
+  if (!ui.is_statusline) return 0;
   return 1;
 }
 
-int get_tabmenu_margin(struct Context *ctx) {
-  if (!ctx->ui.is_tabmenu) return 0;
+int get_tabmenu_margin(struct UI ui) {
+  if (!ui.is_tabmenu) return 0;
   return 1;
 }
 
-int get_buffer_width(struct Context *ctx) { return ctx->terminal.size.x - get_line_number_margin(ctx); }
-int get_buffer_height(struct Context *ctx) { return ctx->terminal.size.y - get_tabmenu_margin(ctx) - get_statusline_margin(ctx); }
+int get_buffer_width(struct UI ui, struct Vec2 size, size_t doc_len) { return size.x - get_line_number_margin(ui, doc_len); }
+int get_buffer_height(struct UI ui, struct Vec2 size) { return size.y - get_tabmenu_margin(ui) - get_statusline_margin(ui); }
 
 enum ForegroundColor get_token_foreground(enum TokenGroup group) {
   switch (group) {
@@ -49,8 +50,8 @@ enum ForegroundColor get_token_foreground(enum TokenGroup group) {
   }
 }
 
-const char *get_editor_mode_label(struct Context *ctx) {
-  switch (ctx->mode) {
+const char *get_editor_mode_label(enum EditorMode mode) {
+  switch (mode) {
   case EDITOR_MODE_INSERT:
     return "INSERT";
   case EDITOR_MODE_VISUAL:

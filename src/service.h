@@ -40,21 +40,21 @@ void init_editor(struct Context *ctx);
 void set_flag_to_quit(struct Context *ctx);
 void quit_editor(struct Context *ctx);
 
-void free_mappings(struct Context *ctx, struct MappingNode *node);
+void free_mappings(struct MappingNode *node);
 void free_resources(struct Context *ctx);
 
 struct Vec4 get_motion_object_bounds(struct Document *doc, struct DinamicMapping mapping);
-enum ParsingStatus parse_dinamic_mapping(struct DinamicMapping *mapping, char *buf, size_t len);
+enum ParsingStatus parse_dinamic_mapping(struct Context *ctx, struct DinamicMapping *ans);
 enum ParsingStatus parse_static_mapping(struct Context *ctx, struct MappingNode *ans);
 void reset_curr_mapping(struct Context *ctx);
 
 struct Vec2 get_teminal_size();
-struct Cell **create_frame(struct Context *ctx);
+struct Cell **create_frame(struct Vec2 size);
 int64_t string_to_number(const char *buf, size_t len);
 void copy_to_clipboard(const char *data);
 void clear_cmd(struct Context *ctx);
 void unsaved_changes_dialog(struct Context *ctx, void (*on_confirm)(struct Context *ctx));
-void check_offset(struct Context *ctx, struct Document *doc);
+void check_offset(struct Document *doc, struct UI ui, struct Vec2 size);
 
 int getchar_nonblock(int ms);
 

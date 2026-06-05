@@ -149,7 +149,6 @@ struct Context {
 
   struct {
     struct MappingNode *head;
-    struct MappingNode *curr;
     char buf[MAX_STRING_BUFFER_SIZE];
     size_t len;
   } mapping;
