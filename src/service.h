@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#include "filesystem.h"
-#include "render.h"
+#include "lexer.h"
+#include "terminal.h"
 
 enum ParseDinamicMappingState {
   STATE_MAPPING_GLOBAL_COUNT,
@@ -18,15 +18,6 @@ enum ParsingStatus {
   PARSING_STATUS_SUCCESS,
   PARSING_STATUS_WAITING,
   PARSING_STATUS_ERROR,
-};
-
-struct DinamicMapping {
-  enum ParsingStatus status;
-  size_t global_count;
-  char op;
-  size_t op_count;
-  char modifier;
-  char motion_object;
 };
 
 void set_statusline_message(struct Context *ctx, const char *msg, enum MessageLevel level);
@@ -43,7 +34,6 @@ void quit_editor(struct Context *ctx);
 void free_mappings(struct MappingNode *node);
 void free_resources(struct Context *ctx);
 
-struct Vec4 get_motion_object_bounds(struct Document *doc, struct DinamicMapping mapping);
 enum ParsingStatus parse_dinamic_mapping(struct Context *ctx, struct DinamicMapping *ans);
 enum ParsingStatus parse_static_mapping(struct Context *ctx, struct MappingNode *ans);
 void reset_curr_mapping(struct Context *ctx);

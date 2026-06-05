@@ -2,7 +2,6 @@
 #define FILESYSTEM_INCLUDED
 
 #include "buffer.h"
-#include "path.h"
 
 bool load_doc_data(struct Document *doc, char *path);
 int save_doc(struct Document *doc);

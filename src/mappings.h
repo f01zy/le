@@ -1,7 +1,9 @@
 #ifndef MAPPINGS_INCLUDED
 #define MAPPINGS_INCLUDED
 
+#include "buffer.h"
 #include "service.h"
+#include "text_objects.h"
 
 struct Mapping {
   const char *cmd;

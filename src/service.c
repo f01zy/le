@@ -240,17 +240,6 @@ enum ParsingStatus parse_dinamic_mapping(struct Context *ctx, struct DinamicMapp
   return PARSING_STATUS_ERROR;
 }
 
-struct Vec4 get_motion_object_bounds(struct Document *doc, struct DinamicMapping mapping) {
-  switch (mapping.motion_object) {
-  case 'd':
-    if (mapping.op == 'd') return (struct Vec4){0, doc->pos.y, doc->buf[doc->pos.y]->len - 1, doc->pos.y};
-    return (struct Vec4){-1};
-
-  default:
-    return (struct Vec4){-1};
-  }
-}
-
 void copy_to_clipboard(const char *data) {
   if (!data) return;
 #ifdef WIN32

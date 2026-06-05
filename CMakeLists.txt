@@ -21,6 +21,7 @@ set(SOURCE
   ./src/lexer.c
   ./src/path.c
   ./src/selected.c
+  ./src/text_objects.c
 )
 
 add_executable(le ${SOURCE})

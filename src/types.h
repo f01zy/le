@@ -2,7 +2,6 @@
 #define TYPES_INCLUDED
 
 #include <stdbool.h>
-#include <stddef.h>
 #include <sys/time.h>
 #include <termios.h>
 
@@ -125,6 +124,14 @@ struct MappingNode {
   void (*act)(struct Context *ctx);
   struct MappingNode **nodes;
   size_t len;
+};
+
+struct DinamicMapping {
+  size_t global_count;
+  char op;
+  size_t op_count;
+  char modifier;
+  char motion_object;
 };
 
 struct Context {

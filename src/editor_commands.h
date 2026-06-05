@@ -1,6 +1,7 @@
 #ifndef EDITOR_COMMANDS_INCLUDED
 #define EDITOR_COMMANDS_INCLUDED
 
+#include "filesystem.h"
 #include "service.h"
 
 struct Command {

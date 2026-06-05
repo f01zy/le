@@ -1,7 +1,5 @@
 #include "ui.h"
 
-// TODO: вместо контекста можно передавать только UI и, если надо, документ
-
 int get_line_number_margin(struct UI ui, size_t doc_len) {
   if (!ui.is_line_numbers) return 0;
   int margin = 0;

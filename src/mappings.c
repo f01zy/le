@@ -1,9 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "defines.h"
 #include "mappings.h"
+#include <string.h>
 
 static struct Mapping mappings_list[] = {
 #define X(name, desc, mapping) {mapping, desc, cmd_##name},
@@ -166,33 +162,35 @@ void exec_mapping(struct Context *ctx) {
 
   struct DinamicMapping dinamic_mapping;
   if (parse_dinamic_mapping(ctx, &dinamic_mapping) == PARSING_STATUS_ERROR) return;
-  struct Vec4 c = get_motion_object_bounds(doc, dinamic_mapping);
   size_t count = dinamic_mapping.global_count;
 
   if (ctx->mode == EDITOR_MODE_VISUAL) {
     struct Vec4 selected = {doc->pos.x, doc->pos.y, doc->selected.x, doc->selected.y};
+    char buf[MAX_BUFFER_SIZE];
+    get_selected_buffer(doc, buf, sizeof(buf));
     switch (dinamic_mapping.op) {
-    case 'd': {
-      char buf[MAX_BUFFER_SIZE];
-      get_selected_buffer(doc, buf, sizeof(buf));
-      remove_range(doc, selected);
-      doc->pos.x = MIN(doc->buf[doc->selected.y]->len - 1, doc->selected.x);
-      doc->pos.y = doc->selected.y;
-      set_editor_mode(ctx, EDITOR_MODE_NORMAL);
-      copy_to_clipboard(buf);
-      init_tokens(doc);
-      break;
-    }
-
+    case 'd':
     case 'y': {
-      char buf[MAX_BUFFER_SIZE];
-      get_selected_buffer(doc, buf, sizeof(buf));
+      if (dinamic_mapping.op == 'd') remove_range(doc, selected);
       doc->pos.x = MIN(doc->buf[doc->selected.y]->len - 1, doc->selected.x);
       doc->pos.y = doc->selected.y;
       copy_to_clipboard(buf);
       set_editor_mode(ctx, EDITOR_MODE_NORMAL);
       break;
     }
+    }
+  } else {
+    switch (dinamic_mapping.op) {
+    case 'd':
+      for (int i = 0; i < count; i++) {
+        if (dinamic_mapping.op == dinamic_mapping.motion_object) {
+          remove_line(doc, doc->pos.y);
+        } else {
+          struct Vec4 c = get_motion_object_bounds(doc, dinamic_mapping);
+          remove_range(doc, c);
+        }
+      }
+      break;
     }
   }
 
@@ -211,6 +209,7 @@ void exec_mapping(struct Context *ctx) {
     break;
   }
 
+  init_tokens(doc);
   reset_curr_mapping(ctx);
 }
 
