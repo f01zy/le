@@ -12,41 +12,61 @@ static struct Mapping mappings_list[] = {
 };
 
 // Movement
-void cmd_up(struct Context *ctx) {
+void cmd_up(struct Context *ctx, int count) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  if (!doc->pos.y) return;
-  doc->pos.x = MIN(doc->pos.x, get_max_x(doc->buf[doc->pos.y - 1]));
-  doc->pos.y--;
+  if (doc->pos.y < count) return;
+  doc->pos.x = MIN(doc->pos.x, get_max_x(doc->buf[doc->pos.y - count]));
+  doc->pos.y -= count;
 }
 
-void cmd_down(struct Context *ctx) {
+void cmd_down(struct Context *ctx, int count) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  if (doc->pos.y == doc->len - 1) return;
-  doc->pos.x = MIN(doc->pos.x, get_max_x(doc->buf[doc->pos.y + 1]));
-  doc->pos.y++;
+  if (doc->pos.y + count >= doc->len) return;
+  doc->pos.x = MIN(doc->pos.x, get_max_x(doc->buf[doc->pos.y + count]));
+  doc->pos.y += count;
 }
 
-void cmd_left(struct Context *ctx) {
+void cmd_left(struct Context *ctx, int count) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  if (!doc->pos.x && !doc->pos.y) return;
-  if (!doc->pos.x) {
-    doc->pos.x = get_max_x(doc->buf[doc->pos.y - 1]);
-    doc->pos.y--;
-  } else {
-    doc->pos.x--;
+  struct Vec2 pos = doc->pos;
+  while (pos.y >= 0) {
+    struct Line *line = doc->buf[pos.y];
+    if (count > pos.x) {
+      if (!pos.y) {
+        pos.x = 0;
+        break;
+      }
+      count -= pos.x + 1;
+      pos.x = get_max_x(doc->buf[pos.y - 1]);
+      pos.y--;
+    } else {
+      pos.x -= count;
+      break;
+    }
   }
+  doc->pos = pos;
 }
 
-void cmd_right(struct Context *ctx) {
+void cmd_right(struct Context *ctx, int count) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  size_t len = get_max_x(doc->buf[doc->pos.y]);
-  if (doc->pos.x == len && doc->pos.y == doc->len - 1) return;
-  if (doc->pos.x == len) {
-    doc->pos.x = 0;
-    doc->pos.y++;
-  } else {
-    doc->pos.x++;
+  struct Vec2 pos = doc->pos;
+  while (pos.y < doc->len) {
+    struct Line *line = doc->buf[pos.y];
+    size_t len = get_max_x(line) - pos.x;
+    if (count > len) {
+      if (pos.y == doc->len - 1) {
+        pos.x = get_max_x(line);
+        break;
+      }
+      count -= len + 1;
+      pos.x = 0;
+      pos.y++;
+    } else {
+      pos.x += count;
+      break;
+    }
   }
+  doc->pos = pos;
 }
 
 // Lines
@@ -155,20 +175,41 @@ void cmd_delete(struct Context *ctx) {
   init_tokens(doc);
 }
 
-// TODO: разделить построчное удаление для операторов движения и повторения от посимвольного удаления для прочих объектов
-void exec_dinamic_mapping(struct Context *ctx) {
+// TODO: пофиксить отображение меню кеймапов
+void exec_mapping(struct Context *ctx) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  struct ParsedMapping mapping = parse_dinamic_mapping(ctx->mapping.buf, ctx->mapping.len);
-  struct Vec4 c = get_motion_object_bounds(doc, mapping);
-  if (c.ax == -1) {
+
+  // Try to execute static mapping
+  struct MappingNode static_mapping;
+  enum ParsingStatus static_status = parse_static_mapping(ctx, &static_mapping);
+  if (static_status == PARSING_STATUS_WAITING) return;
+  if (static_status == PARSING_STATUS_SUCCESS) {
+    if (static_mapping.act) static_mapping.act(ctx);
     reset_curr_mapping(ctx);
     return;
   }
-  switch (mapping.op) {
-  case 'd':
-    remove_range(doc, c);
+
+  // Try to execute dinamic mapping
+  struct DinamicMapping dinamic_mapping;
+  if (parse_dinamic_mapping(&dinamic_mapping, ctx->mapping.buf, ctx->mapping.len) == PARSING_STATUS_ERROR) return;
+  struct Vec4 c = get_motion_object_bounds(doc, dinamic_mapping);
+  size_t count = dinamic_mapping.global_count;
+
+  switch (dinamic_mapping.op) {
+  case 'l':
+    cmd_right(ctx, count);
+    break;
+  case 'h':
+    cmd_left(ctx, count);
+    break;
+  case 'j':
+    cmd_down(ctx, count);
+    break;
+  case 'k':
+    cmd_up(ctx, count);
     break;
   }
+
   reset_curr_mapping(ctx);
 }
 
@@ -205,5 +246,5 @@ void init_mappings(struct Context *ctx) {
     struct Mapping map = mappings_list[i];
     add_mapping_node(ctx, head, map);
   }
-  ctx->mapping.head_mapping = ctx->mapping.curr_mapping = head;
+  ctx->mapping.head = head;
 }

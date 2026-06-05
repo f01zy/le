@@ -2,23 +2,12 @@
 #include <ctype.h>
 
 void handle_normal_mode(struct Context *ctx, int ch) {
-  set_statusline_mode(ctx, STATUS_MODE_NORMAL);
   if (ctx->mapping.len < sizeof(ctx->mapping.buf)) {
     ctx->mapping.buf[ctx->mapping.len++] = ch;
     ctx->mapping.buf[ctx->mapping.len] = '\0';
   }
-  if (ctx->mapping.is_dinamic_mapping) return;
-  bool is_found = false;
-  for (int i = 0; i < ctx->mapping.curr_mapping->len; i++) {
-    struct MappingNode *node = ctx->mapping.curr_mapping->nodes[i];
-    if (node->ch == ch) {
-      ctx->mapping.curr_mapping = node;
-      is_found = true;
-      break;
-    }
-  }
-  if (!ctx->mapping.curr_mapping->len) exec_curr_mapping(ctx);
-  if (!is_found) ctx->mapping.is_dinamic_mapping = true;
+  set_statusline_mode(ctx, STATUS_MODE_NORMAL);
+  exec_mapping(ctx);
 }
 
 void handle_insert_mode(struct Context *ctx, int ch) {

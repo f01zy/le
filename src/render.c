@@ -93,7 +93,7 @@ void render_statusline(struct Context *ctx, struct Document *doc, struct Cell **
 
   case STATUS_MODE_NORMAL:;
     const char *label = get_editor_mode_label(ctx);
-    len = snprintf(buf, sizeof(buf), "-- %s -- %d/%d", label, doc->pos.y + 1, doc->pos.x + 1);
+    len = snprintf(buf, sizeof(buf), "-- %s -- %d/%d %s", label, doc->pos.y + 1, doc->pos.x + 1, ctx->mapping.buf);
     break;
 
   case STATUS_MODE_COMMAND:
@@ -155,9 +155,10 @@ void render_buf(struct Context *ctx, struct Document *doc, struct Cell **frame) 
   }
 }
 
+// TODO: удалил curr_mapping, надо создать метод его поиска
 void render_mappings_menu(struct Context *ctx, struct Document *doc, struct Cell **frame) {
   int col = ctx->terminal.win.ws_col, row = ctx->terminal.win.ws_row;
-  struct MappingNode *node = ctx->mapping.curr_mapping;
+  struct MappingNode *node = ctx->mapping.head;
   int offsetY = get_tabmenu_margin(ctx);
   int startY = row - offsetY - MAPPINGS_COL;
   if (startY < 1) return;
@@ -181,7 +182,7 @@ void render_mappings_menu(struct Context *ctx, struct Document *doc, struct Cell
 }
 
 void render(struct Context *ctx) {
-  struct Cell **prev_frame = ctx->frame.prev_frame, **curr_frame = ctx->frame.curr_frame;
+  struct Cell **prev_frame = ctx->frame.prev, **curr_frame = ctx->frame.curr;
   struct Document *doc = ctx->docs[ctx->curr_doc];
   int col = ctx->terminal.win.ws_col, row = ctx->terminal.win.ws_row;
   render_buf(ctx, doc, curr_frame);
@@ -202,8 +203,8 @@ void render(struct Context *ctx) {
   }
   ANSI_SHOW_CURSOR;
 
-  ctx->frame.prev_frame = curr_frame;
-  ctx->frame.curr_frame = prev_frame;
+  ctx->frame.prev = curr_frame;
+  ctx->frame.curr = prev_frame;
   if (ctx->mode == EDITOR_MODE_COMMAND) {
     move_cursor_yx(row - 1, ctx->status.cmd.len + 1);
   } else if (ctx->mode == EDITOR_MODE_DIALOG) {

@@ -6,15 +6,22 @@
 #include "filesystem.h"
 #include "render.h"
 
-enum ParseMappingState {
-  STATE_WAITING_GLOBAL_COUNT,
-  STATE_WAITING_OPERATOR,
-  STATE_WAITING_OPERATOR_COUNT,
-  STATE_WAITING_MODIFIER,
-  STATE_WAITING_MOTION_OBJECT,
+enum ParseDinamicMappingState {
+  STATE_MAPPING_GLOBAL_COUNT,
+  STATE_MAPPING_OPERATOR,
+  STATE_MAPPING_OPERATOR_COUNT,
+  STATE_MAPPING_MODIFIER,
+  STATE_MAPPING_MOTION_OBJECT,
 };
 
-struct ParsedMapping {
+enum ParsingStatus {
+  PARSING_STATUS_SUCCESS,
+  PARSING_STATUS_WAITING,
+  PARSING_STATUS_ERROR,
+};
+
+struct DinamicMapping {
+  enum ParsingStatus status;
   size_t global_count;
   char op;
   size_t op_count;
@@ -36,13 +43,14 @@ void quit_editor(struct Context *ctx);
 void free_mappings(struct Context *ctx, struct MappingNode *node);
 void free_resources(struct Context *ctx);
 
-struct Vec4 get_motion_object_bounds(struct Document *doc, struct ParsedMapping mapping);
-struct ParsedMapping parse_dinamic_mapping(char *buf, size_t len);
+struct Vec4 get_motion_object_bounds(struct Document *doc, struct DinamicMapping mapping);
+enum ParsingStatus parse_dinamic_mapping(struct DinamicMapping *mapping, char *buf, size_t len);
+enum ParsingStatus parse_static_mapping(struct Context *ctx, struct MappingNode *ans);
+void reset_curr_mapping(struct Context *ctx);
+
 struct Cell **create_frame(struct Context *ctx);
 int64_t string_to_number(const char *buf, size_t len);
 void copy_to_clipboard(const char *data);
-void reset_curr_mapping(struct Context *ctx);
-void exec_curr_mapping(struct Context *ctx);
 void clear_cmd(struct Context *ctx);
 void unsaved_changes_dialog(struct Context *ctx, void (*on_confirm)(struct Context *ctx));
 void check_offset(struct Context *ctx, struct Document *doc);

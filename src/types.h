@@ -144,15 +144,13 @@ struct Context {
   } terminal;
 
   struct {
-    struct Cell **prev_frame;
-    struct Cell **curr_frame;
-    struct timeval prev_frame_time;
+    struct Cell **prev;
+    struct Cell **curr;
+    struct timeval prev_time;
   } frame;
 
   struct {
-    bool is_dinamic_mapping;
-    struct MappingNode *curr_mapping;
-    struct MappingNode *head_mapping;
+    struct MappingNode *head;
     char buf[MAX_STRING_BUFFER_SIZE];
     size_t len;
   } mapping;

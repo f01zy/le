@@ -25,7 +25,7 @@ void quit_editor(struct Context *ctx) {
 }
 
 void init_context(struct Context *ctx) {
-  gettimeofday(&ctx->frame.prev_frame_time, NULL);
+  gettimeofday(&ctx->frame.prev_time, NULL);
   struct UI ui = {
       .is_line_numbers = true,
       .is_relative_line_numbers = false,
@@ -34,8 +34,8 @@ void init_context(struct Context *ctx) {
       .is_code_highlighting = true,
       .is_mappings_menu = false,
   };
-  ctx->frame.curr_frame = create_frame(ctx);
-  ctx->frame.prev_frame = create_frame(ctx);
+  ctx->frame.curr = create_frame(ctx);
+  ctx->frame.prev = create_frame(ctx);
   ctx->ui = ui;
   ctx->terminal.conf = ctx->terminal.backup;
   ctx->terminal.conf.c_iflag |= IXOFF;
@@ -59,7 +59,7 @@ void free_mappings(struct Context *ctx, struct MappingNode *node) {
 }
 
 void free_resources(struct Context *ctx) {
-  struct Cell **prev_frame = ctx->frame.prev_frame, **curr_frame = ctx->frame.curr_frame;
+  struct Cell **prev_frame = ctx->frame.prev, **curr_frame = ctx->frame.curr;
   for (int i = 0; i < ctx->len; i++) {
     struct Document *doc = ctx->docs[i];
     for (int j = 0; j < doc->len; j++) {
@@ -78,7 +78,6 @@ void free_resources(struct Context *ctx) {
   free(ctx->docs);
   free(prev_frame);
   free(curr_frame);
-  free_mappings(ctx, ctx->mapping.head_mapping);
 }
 
 void check_offset(struct Context *ctx, struct Document *doc) {
@@ -127,15 +126,8 @@ int getchar_nonblock(int ms) {
 
 void reset_curr_mapping(struct Context *ctx) {
   ctx->ui.is_mappings_menu = false;
-  ctx->mapping.is_dinamic_mapping = false;
-  ctx->mapping.curr_mapping = ctx->mapping.head_mapping;
   ctx->mapping.buf[0] = '\0';
   ctx->mapping.len = 0;
-}
-
-void exec_curr_mapping(struct Context *ctx) {
-  if (ctx->mapping.curr_mapping->act) ctx->mapping.curr_mapping->act(ctx);
-  if (ctx->mapping.curr_mapping->ch != ' ') reset_curr_mapping(ctx);
 }
 
 void set_statusline_message(struct Context *ctx, const char *msg, enum MessageLevel level) {
@@ -160,57 +152,86 @@ void unsaved_changes_dialog(struct Context *ctx, void (*on_confirm)(struct Conte
   set_statusline_dialog(ctx, "You have unsaved changes. Are you sure (Y/N): ", on_confirm, NULL);
 }
 
-struct ParsedMapping parse_dinamic_mapping(char *buf, size_t len) {
-  enum ParseMappingState state = STATE_WAITING_GLOBAL_COUNT;
-  struct ParsedMapping mapping;
+enum ParsingStatus parse_static_mapping(struct Context *ctx, struct MappingNode *ans) {
+  struct MappingNode *curr = ctx->mapping.head;
+  for (int i = 0; i < ctx->mapping.len; i++) {
+    char ch = ctx->mapping.buf[i];
+    bool is_found = false;
+    for (int j = 0; j < curr->len; j++) {
+      if (curr->nodes[j]->ch == ch) {
+        curr = curr->nodes[j];
+        is_found = true;
+        break;
+      }
+    }
+    if (!is_found) return PARSING_STATUS_ERROR;
+  }
+  *ans = *curr;
+  if (curr->len) return PARSING_STATUS_WAITING;
+  return PARSING_STATUS_SUCCESS;
+}
+
+static const char *motion_operators = "hjklwWeEbB";
+static const char *modifier_operators = "dyc";
+
+enum ParsingStatus parse_dinamic_mapping(struct DinamicMapping *mapping, char *buf, size_t len) {
+  enum ParseDinamicMappingState state = STATE_MAPPING_GLOBAL_COUNT;
   size_t curr = 0;
   char temp[MAX_STRING_BUFFER_SIZE];
+
   for (int i = 0; i < len; i++) {
     char ch = buf[i];
-    bool is_finished = false;
     if (curr >= sizeof(temp)) break;
     switch (state) {
-    case STATE_WAITING_GLOBAL_COUNT:
-    case STATE_WAITING_OPERATOR_COUNT:
+    case STATE_MAPPING_GLOBAL_COUNT:
+    case STATE_MAPPING_OPERATOR_COUNT:
       if (isdigit(ch)) {
         temp[curr++] = ch;
         break;
       }
       int64_t count = MAX(string_to_number(temp, curr), 1);
-      if (state == STATE_WAITING_GLOBAL_COUNT) {
-        mapping.global_count = count;
-        state = STATE_WAITING_OPERATOR;
+      if (state == STATE_MAPPING_GLOBAL_COUNT) {
+        mapping->global_count = count;
+        state = STATE_MAPPING_OPERATOR;
       } else {
-        mapping.op_count = count;
-        state = STATE_WAITING_MODIFIER;
+        mapping->op_count = count;
+        state = STATE_MAPPING_MODIFIER;
       }
       curr = 0;
       i--;
       break;
-    case STATE_WAITING_OPERATOR:
-      mapping.op = ch;
-      if (i < len - 1 && buf[i + 1] == ch) {
-        mapping.motion_object = ch;
-        is_finished = true;
-        break;
+    case STATE_MAPPING_OPERATOR:
+      mapping->op = ch;
+      for (int i = 0; i < strlen(motion_operators); i++) {
+        if (motion_operators[i] == ch) return PARSING_STATUS_SUCCESS;
       }
-      state = STATE_WAITING_OPERATOR_COUNT;
+      bool is_modifier_operator = false;
+      for (int i = 0; i < strlen(motion_operators); i++) {
+        if (motion_operators[i] == ch) {
+          is_modifier_operator = true;
+          break;
+        }
+      }
+      state = is_modifier_operator ? STATE_MAPPING_MODIFIER : STATE_MAPPING_MOTION_OBJECT;
       break;
-    case STATE_WAITING_MODIFIER:
-      mapping.modifier = ch;
-      state = STATE_WAITING_MOTION_OBJECT;
+    case STATE_MAPPING_MODIFIER:
+      if (ch == 'i' || ch == 'a') {
+        mapping->modifier = ch;
+      } else {
+        i--;
+      }
+      state = STATE_MAPPING_MOTION_OBJECT;
       break;
-    case STATE_WAITING_MOTION_OBJECT:
-      mapping.motion_object = ch;
-      is_finished = true;
-      break;
+    case STATE_MAPPING_MOTION_OBJECT:
+      mapping->motion_object = ch;
+      return PARSING_STATUS_SUCCESS;
     }
-    if (is_finished) break;
   }
-  return mapping;
+
+  return PARSING_STATUS_ERROR;
 }
 
-struct Vec4 get_motion_object_bounds(struct Document *doc, struct ParsedMapping mapping) {
+struct Vec4 get_motion_object_bounds(struct Document *doc, struct DinamicMapping mapping) {
   switch (mapping.motion_object) {
   case 'd':
     if (mapping.op == 'd') return (struct Vec4){0, doc->pos.y, doc->buf[doc->pos.y]->len - 1, doc->pos.y};

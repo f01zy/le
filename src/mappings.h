@@ -14,10 +14,6 @@ struct Mapping {
   X(toggle_code_highlighting, "Toggle code highlighting", " h")                                                                                                \
   X(toggle_line_numbers, "Toggle line numbers", " n")                                                                                                          \
   X(toggle_relative_line_numbers, "Toggle relative line numbers", " rn")                                                                                       \
-  X(up, "Move up", "k")                                                                                                                                        \
-  X(down, "Move down", "j")                                                                                                                                    \
-  X(right, "Move right", "l")                                                                                                                                  \
-  X(left, "Move left", "h")                                                                                                                                    \
   X(line_start, "Move to start of line", "0")                                                                                                                  \
   X(line_end, "Move to end of line", "$")                                                                                                                      \
   X(doc_start, "Move to start of document", "gg")                                                                                                              \
@@ -29,16 +25,16 @@ struct Mapping {
   X(insert_mode_prev, "Enable insert mode", "i")                                                                                                               \
   X(insert_mode_next, "Enable insert mode", "a")                                                                                                               \
   X(command_mode, "Enable command mode", ":")                                                                                                                  \
-  X(visual_mode, "Enable visual mode", "v")
+  X(visual_mode, "Enable visual mode", "v")                                                                                                                    \
+  X(yank, "Yank selected text", "y")
 
-// X(yank, "Yank selected text", "y")
-// X(delete, "Delete selected text", "d")
+// TODO: вернуть кеймап удаления выделенного текста. щас конфликт режимов редактора
 
 #define X(name, desc, mapping) void cmd_##name(struct Context *ctx);
 COMMANDS_LIST
 #undef X
 
-void exec_dinamic_mapping(struct Context *ctx);
+void exec_mapping(struct Context *ctx);
 void add_mapping_node(struct Context *ctx, struct MappingNode *head, struct Mapping map);
 void init_mappings(struct Context *ctx);
 
