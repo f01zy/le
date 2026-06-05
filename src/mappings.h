@@ -10,9 +10,6 @@ struct Mapping {
 };
 
 #define COMMANDS_LIST                                                                                                                                          \
-  X(toggle_mappings_menu, "Toggle mappings menu", " ")                                                                                                         \
-  X(toggle_code_highlighting, "Toggle code highlighting", " h")                                                                                                \
-  X(toggle_line_numbers, "Toggle line numbers", " n")                                                                                                          \
   X(toggle_relative_line_numbers, "Toggle relative line numbers", " rn")                                                                                       \
   X(line_start, "Move to start of line", "0")                                                                                                                  \
   X(line_end, "Move to end of line", "$")                                                                                                                      \
@@ -26,7 +23,9 @@ struct Mapping {
   X(insert_mode_next, "Enable insert mode", "a")                                                                                                               \
   X(command_mode, "Enable command mode", ":")                                                                                                                  \
   X(visual_mode, "Enable visual mode", "v")                                                                                                                    \
-  X(yank, "Yank selected text", "y")
+  X(yank, "Yank selected text", "y")                                                                                                                           \
+  X(toggle_code_highlighting, "Toggle code highlighting", " h")                                                                                                \
+  X(toggle_line_numbers, "Toggle line numbers", " n")
 
 // TODO: вернуть кеймап удаления выделенного текста. щас конфликт режимов редактора
 

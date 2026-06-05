@@ -48,6 +48,7 @@ enum ParsingStatus parse_dinamic_mapping(struct DinamicMapping *mapping, char *b
 enum ParsingStatus parse_static_mapping(struct Context *ctx, struct MappingNode *ans);
 void reset_curr_mapping(struct Context *ctx);
 
+struct Vec2 get_teminal_size();
 struct Cell **create_frame(struct Context *ctx);
 int64_t string_to_number(const char *buf, size_t len);
 void copy_to_clipboard(const char *data);

@@ -150,7 +150,6 @@ void cmd_visual_mode(struct Context *ctx) {
 // UI
 void cmd_toggle_line_numbers(struct Context *ctx) { ctx->ui.is_line_numbers = !ctx->ui.is_line_numbers; }
 void cmd_toggle_relative_line_numbers(struct Context *ctx) { ctx->ui.is_relative_line_numbers = !ctx->ui.is_relative_line_numbers; }
-void cmd_toggle_mappings_menu(struct Context *ctx) { ctx->ui.is_mappings_menu = true; }
 void cmd_toggle_code_highlighting(struct Context *ctx) { ctx->ui.is_code_highlighting = !ctx->ui.is_code_highlighting; }
 
 // Visual mode
@@ -175,7 +174,6 @@ void cmd_delete(struct Context *ctx) {
   init_tokens(doc);
 }
 
-// TODO: пофиксить отображение меню кеймапов
 void exec_mapping(struct Context *ctx) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
 

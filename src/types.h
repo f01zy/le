@@ -3,7 +3,6 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include <sys/ioctl.h>
 #include <sys/time.h>
 #include <termios.h>
 
@@ -97,7 +96,6 @@ struct UI {
   bool is_relative_line_numbers;
   bool is_statusline;
   bool is_tabmenu;
-  bool is_mappings_menu;
   bool is_code_highlighting;
 };
 
@@ -140,7 +138,7 @@ struct Context {
   struct {
     struct termios conf;
     struct termios backup;
-    struct winsize win;
+    struct Vec2 size;
   } terminal;
 
   struct {
@@ -151,6 +149,7 @@ struct Context {
 
   struct {
     struct MappingNode *head;
+    struct MappingNode *curr;
     char buf[MAX_STRING_BUFFER_SIZE];
     size_t len;
   } mapping;

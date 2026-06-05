@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
       set_statusline_mode(&ctx, STATUS_MODE_NORMAL);
       clear_cmd(&ctx);
     }
-    if (!ctx.ui.is_mappings_menu && ctx.mapping.len && delta > 300000) {
+    if (ctx.mapping.len && delta > 300000) {
       struct MappingNode node;
       if (parse_static_mapping(&ctx, &node) != PARSING_STATUS_ERROR) {
         if (node.act) node.act(&ctx);

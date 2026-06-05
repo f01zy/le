@@ -5,11 +5,16 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifdef WIN32
+#include "windows.h"
+#else
+#include <sys/ioctl.h>
+#endif
+
 #include "service.h"
 
 void init_editor(struct Context *ctx) {
   ANSI_RESET_SCREEN;
-  ioctl(STDIN_FILENO, TIOCGWINSZ, &ctx->terminal.win);
   tcgetattr(STDIN_FILENO, &ctx->terminal.backup);
   init_context(ctx);
   tcsetattr(STDIN_FILENO, TCSANOW, &ctx->terminal.conf);
@@ -32,8 +37,8 @@ void init_context(struct Context *ctx) {
       .is_statusline = true,
       .is_tabmenu = true,
       .is_code_highlighting = true,
-      .is_mappings_menu = false,
   };
+  ctx->terminal.size = get_teminal_size();
   ctx->frame.curr = create_frame(ctx);
   ctx->frame.prev = create_frame(ctx);
   ctx->ui = ui;
@@ -71,7 +76,7 @@ void free_resources(struct Context *ctx) {
     free(doc->path);
     free(doc);
   }
-  for (int i = 0; i < ctx->terminal.win.ws_row; i++) {
+  for (int i = 0; i < ctx->terminal.size.y; i++) {
     free(prev_frame[i]);
     free(curr_frame[i]);
   }
@@ -107,9 +112,9 @@ void set_editor_mode(struct Context *ctx, enum EditorMode mode) {
 }
 
 struct Cell **create_frame(struct Context *ctx) {
-  int col = ctx->terminal.win.ws_col, row = ctx->terminal.win.ws_row;
+  int col = ctx->terminal.size.x, row = ctx->terminal.size.y;
   struct Cell **frame = (struct Cell **)xmalloc(row * sizeof(struct Cell *));
-  for (int i = 0; i < ctx->terminal.win.ws_row; i++) {
+  for (int i = 0; i < row; i++) {
     frame[i] = (struct Cell *)xcalloc(col, sizeof(struct Cell));
   }
   return frame;
@@ -125,7 +130,6 @@ int getchar_nonblock(int ms) {
 }
 
 void reset_curr_mapping(struct Context *ctx) {
-  ctx->ui.is_mappings_menu = false;
   ctx->mapping.buf[0] = '\0';
   ctx->mapping.len = 0;
 }
@@ -245,7 +249,6 @@ struct Vec4 get_motion_object_bounds(struct Document *doc, struct DinamicMapping
 void copy_to_clipboard(const char *data) {
   if (!data) return;
 #ifdef WIN32
-#include <windows.h>
   size_t len = strlen(data);
   HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len);
   memcpy(GlobalLock(hMem), data, len);
@@ -260,6 +263,20 @@ void copy_to_clipboard(const char *data) {
     fprintf(pipe, "%s", data);
     pclose(pipe);
   }
+#endif
+}
+
+struct Vec2 get_teminal_size() {
+#ifdef WIN32
+  CONSOLE_SCREEN_BUFFER_INFO csbi;
+  int ret;
+  ret = GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+  if (ret) return (struct Vec2){csbi.dwSize.X, csbi.dwSize.Y};
+  exit(1);
+#else
+  struct winsize size;
+  ioctl(STDIN_FILENO, TIOCGWINSZ, &size);
+  return (struct Vec2){size.ws_col, size.ws_row};
 #endif
 }
 

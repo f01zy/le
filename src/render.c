@@ -30,7 +30,7 @@ void render_line(struct Context *ctx, struct Cell *buf, size_t len, int y) {
 }
 
 void render_tabmenu(struct Context *ctx, struct Cell **frame) {
-  int col = ctx->terminal.win.ws_col, row = ctx->terminal.win.ws_row;
+  int col = ctx->terminal.size.x, row = ctx->terminal.size.y;
   for (int i = 0; i < col; i++) {
     frame[0][i] = CELL(' ');
   }
@@ -80,7 +80,7 @@ void render_line_numbers(struct Context *ctx, struct Document *doc, struct Cell 
 void render_statusline(struct Context *ctx, struct Document *doc, struct Cell **frame) {
   char buf[MAX_BUFFER_SIZE];
   size_t len = 0;
-  int col = ctx->terminal.win.ws_col, row = ctx->terminal.win.ws_row;
+  int col = ctx->terminal.size.x, row = ctx->terminal.size.y;
   int y = row - 1;
   enum ForegroundColor fg = FOREGROUND_WHITE;
 
@@ -155,42 +155,15 @@ void render_buf(struct Context *ctx, struct Document *doc, struct Cell **frame) 
   }
 }
 
-// TODO: удалил curr_mapping, надо создать метод его поиска
-void render_mappings_menu(struct Context *ctx, struct Document *doc, struct Cell **frame) {
-  int col = ctx->terminal.win.ws_col, row = ctx->terminal.win.ws_row;
-  struct MappingNode *node = ctx->mapping.head;
-  int offsetY = get_tabmenu_margin(ctx);
-  int startY = row - offsetY - MAPPINGS_COL;
-  if (startY < 1) return;
-  for (int i = startY - 1; i < startY + MAPPINGS_COL; i++) {
-    for (int j = 0; j < col; j++) {
-      frame[i][j] = (struct Cell){' ', RENDER_DEFAULT, FOREGROUND_WHITE, BACKGROUND_GRAY};
-    }
-  }
-  for (int i = 0; i < node->len; i++) {
-    struct MappingNode *curr = node->nodes[i];
-    char buf[MAX_BUFFER_SIZE];
-    size_t len = curr->desc ? snprintf(buf, sizeof(buf), "%c - %s", curr->ch, curr->desc) : snprintf(buf, sizeof(buf), "%c +%zu mappings", curr->ch, curr->len);
-    int offsetX = (i / MAPPINGS_COL) * MAPPINGS_COL_WIDTH + 2;
-    for (int j = 0; j < len && j < MAPPINGS_COL_WIDTH; j++) {
-      int x = offsetX + j;
-      int y = startY + i % MAPPINGS_COL;
-      if (x >= col) break;
-      frame[y][x].ch = buf[j];
-    }
-  }
-}
-
 void render(struct Context *ctx) {
   struct Cell **prev_frame = ctx->frame.prev, **curr_frame = ctx->frame.curr;
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  int col = ctx->terminal.win.ws_col, row = ctx->terminal.win.ws_row;
+  int col = ctx->terminal.size.x, row = ctx->terminal.size.y;
   render_buf(ctx, doc, curr_frame);
 
   if (ctx->ui.is_tabmenu) render_tabmenu(ctx, curr_frame);
   if (ctx->ui.is_line_numbers) render_line_numbers(ctx, doc, curr_frame);
   if (ctx->ui.is_statusline) render_statusline(ctx, doc, curr_frame);
-  if (ctx->ui.is_mappings_menu) render_mappings_menu(ctx, doc, curr_frame);
 
   ANSI_HIDE_CURSOR;
   for (int i = 0; i < row; i++) {

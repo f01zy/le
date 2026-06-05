@@ -1,3 +1,5 @@
+// TODO: использовать windows.h для рендера на винде
+
 #include <stdio.h>
 #include <unistd.h>
 

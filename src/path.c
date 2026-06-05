@@ -12,7 +12,7 @@ void get_real_path(const char *path, size_t len, char *out, size_t max_size) {
   for (int i = 0; i < len; i++) {
     char *buf = (char *)xmalloc(MAX_BUFFER_SIZE);
     int curr = 0, j = i;
-    while (curr < MAX_BUFFER_SIZE - 1 && j < len && path[j] != '/') {
+    while (curr < MAX_BUFFER_SIZE - 1 && j < len && path[j] != PATH_SEPARATOR) {
       buf[curr++] = path[j++];
     }
     buf[curr] = '\0';
@@ -30,11 +30,19 @@ void get_real_path(const char *path, size_t len, char *out, size_t max_size) {
       if (top < height) stack[top++] = buf;
     }
   }
-  // TODO: доделать под винду
   int curr = 0;
   for (int i = 0; i < top; i++) {
     char temp[MAX_BUFFER_SIZE];
+#ifdef WIN32
+    size_t count;
+    if (curr) {
+      count = snprintf(temp, sizeof(temp), "%c%s", PATH_SEPARATOR, stack[i]);
+    } else {
+      count = snprintf(temp, sizeof(temp), "%s", stack[i]);
+    }
+#else
     size_t count = snprintf(temp, sizeof(temp), "%c%s", PATH_SEPARATOR, stack[i]);
+#endif
     xmemcpy(out + curr, max_size - curr - 1, temp, count);
     curr += count;
     free(stack[i]);
