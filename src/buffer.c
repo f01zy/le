@@ -3,9 +3,6 @@
 #include <string.h>
 
 #include "buffer.h"
-#include "defines.h"
-
-size_t get_max_x(struct Line *line) { return line->len ? line->len - 1 : 0; }
 
 struct Document *create_doc(struct Context *ctx) {
   struct Document *doc = (struct Document *)xcalloc(1, sizeof(struct Document));
@@ -117,19 +114,25 @@ enum RemoveResult remove_from_line(struct Document *doc, int y, int x) {
   return REMOVE_LINE;
 }
 
-// TODO: если bx == first.len, last будет равен следующей строке
 void remove_range(struct Document *doc, struct Vec4 c) {
   get_selected_coordinates(&c);
   if (c.ay >= doc->len || c.by >= doc->len) return;
-  struct Line *first = doc->buf[c.ay], *last = doc->buf[c.by];
+  struct Line *first = doc->buf[c.ay], *last;
+  size_t remainder;
+  if (c.ay == c.by && c.ax == first->len && c.ay < doc->len - 1) {
+    last = doc->buf[++c.by];
+    remainder = last->len;
+  } else {
+    last = doc->buf[c.by];
+    remainder = MAX((long long)last->len - c.bx - 1, 0);
+  }
   if (c.ax > first->len || c.bx > last->len) return;
-  int remainder = MAX((long long)last->len - c.bx - 1, 0);
   size_t len = c.ax + remainder;
   if (first->size - 1 < len) {
     first->size = len + ADDITIONAL_REALLOCATION;
     first->buf = (char *)xrealloc(first->buf, first->size);
   }
-  if (remainder) memcpy(first->buf + c.ax, last->buf + c.bx + 1, remainder);
+  if (remainder) memcpy(first->buf + c.ax, last->buf + last->len - remainder, remainder);
   first->len = len;
   first->buf[len] = '\0';
   int lines_to_remove = c.by - c.ay;

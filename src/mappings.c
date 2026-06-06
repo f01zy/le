@@ -15,14 +15,14 @@ static struct Mapping mappings_list[] = {
 void cmd_up(struct Context *ctx, int count) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
   if (doc->pos.y < count) return;
-  doc->pos.x = MIN(doc->pos.x, get_max_x(doc->buf[doc->pos.y - count]));
+  doc->pos.x = MIN(doc->pos.x, MAX_LINE_X(doc->buf[doc->pos.y - count]->len));
   doc->pos.y -= count;
 }
 
 void cmd_down(struct Context *ctx, int count) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
   if (doc->pos.y + count >= doc->len) return;
-  doc->pos.x = MIN(doc->pos.x, get_max_x(doc->buf[doc->pos.y + count]));
+  doc->pos.x = MIN(doc->pos.x, MAX_LINE_X(doc->buf[doc->pos.y + count]->len));
   doc->pos.y += count;
 }
 
@@ -37,7 +37,7 @@ void cmd_left(struct Context *ctx, int count) {
         break;
       }
       count -= pos.x + 1;
-      pos.x = get_max_x(doc->buf[pos.y - 1]);
+      pos.x = MAX_LINE_X(doc->buf[pos.y - 1]->len);
       pos.y--;
     } else {
       pos.x -= count;
@@ -52,10 +52,10 @@ void cmd_right(struct Context *ctx, int count) {
   struct Vec2 pos = doc->pos;
   while (pos.y < doc->len) {
     struct Line *line = doc->buf[pos.y];
-    size_t len = get_max_x(line) - pos.x;
+    size_t len = MAX_LINE_X(line->len) - pos.x;
     if (count > len) {
       if (pos.y == doc->len - 1) {
-        pos.x = get_max_x(line);
+        pos.x = MAX_LINE_X(line->len);
         break;
       }
       count -= len + 1;
@@ -77,19 +77,19 @@ void cmd_line_start(struct Context *ctx) {
 
 void cmd_line_end(struct Context *ctx) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  doc->pos.x = get_max_x(doc->buf[doc->pos.y]);
+  doc->pos.x = MAX_LINE_X(doc->buf[doc->pos.y]->len);
 }
 
 // Documents
 void cmd_doc_start(struct Context *ctx) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  doc->pos.x = MIN(doc->pos.x, get_max_x(doc->buf[0]));
+  doc->pos.x = MIN(doc->pos.x, MAX_LINE_X(doc->buf[0]->len));
   doc->pos.y = 0;
 }
 
 void cmd_doc_end(struct Context *ctx) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  doc->pos.x = MIN(doc->pos.x, get_max_x(doc->buf[doc->len - 1]));
+  doc->pos.x = MIN(doc->pos.x, MAX_LINE_X(doc->buf[doc->len - 1]->len));
   doc->pos.y = doc->len - 1;
 }
 
@@ -178,15 +178,15 @@ void exec_mapping(struct Context *ctx) {
     enum EditorMode mode = EDITOR_MODE_NORMAL;
     if (dinamic_mapping.op == 'd') {
       remove_range(doc, c);
-      doc->pos.x = MIN(doc->pos.x, get_max_x(doc->buf[doc->pos.y]));
+      doc->pos.x = MIN(doc->pos.x, MAX_LINE_X(doc->buf[doc->pos.y]->len));
     }
     if (dinamic_mapping.op == 'c') {
       mode = EDITOR_MODE_INSERT;
       remove_range(doc, c);
-      doc->pos.x = MIN(doc->pos.x, get_max_x(doc->buf[doc->pos.y]));
+      doc->pos.x = MIN(doc->pos.x, MAX_LINE_X(doc->buf[doc->pos.y]->len));
     }
     if (ctx->mode == EDITOR_MODE_VISUAL) {
-      doc->pos.x = MIN(get_max_x(doc->buf[doc->selected.y]), doc->selected.x);
+      doc->pos.x = MIN(MAX_LINE_X(doc->buf[doc->selected.y]->len), doc->selected.x);
       doc->pos.y = doc->selected.y;
     }
     copy_to_clipboard(buf);

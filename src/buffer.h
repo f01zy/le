@@ -11,7 +11,6 @@ enum RemoveResult {
   REMOVE_LINE,
 };
 
-size_t get_max_x(struct Line *line);
 struct Document *create_doc(struct Context *ctx);
 void set_doc_path(struct Document *doc, char *path);
 void remove_doc_path(struct Document *doc);
