@@ -3,6 +3,11 @@
 
 #include "editor_commands.h"
 
+void command_unknown(struct Context *ctx, char *token);
+void command_quit(struct Context *ctx, char *token);
+void command_save(struct Context *ctx, char *token);
+void command_open(struct Context *ctx, char *token);
+
 static struct Command commands_list[] = {
     {"open", command_open},
     {"quit", command_quit},

@@ -9,11 +9,6 @@ struct Command {
   void (*act)(struct Context *ctx, char *token);
 };
 
-void command_unknown(struct Context *ctx, char *token);
-void command_quit(struct Context *ctx, char *token);
-void command_save(struct Context *ctx, char *token);
-void command_open(struct Context *ctx, char *token);
-
 void handle_command(struct Context *ctx);
 
 #endif

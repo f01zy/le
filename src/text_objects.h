@@ -3,7 +3,11 @@
 
 #include "types.h"
 
-struct Vec4 get_word_bounds(struct Document *doc, size_t count, bool is_big_word);
+enum WordGroup {
+  WORD_GROUP_SPACE,
+  WORD_GROUP_SPECIAL,
+  WORD_GROUP_ALPHA,
+};
 
 struct Vec4 get_motion_object_bounds(struct Document *doc, enum EditorMode mode, struct DinamicMapping mapping);
 

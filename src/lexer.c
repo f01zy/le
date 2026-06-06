@@ -12,18 +12,22 @@ static const char *data_types[] = {
     "union", "enum", "const", "static", "extern", "volatile", "register", "bool",   "size_t",
 };
 
-struct Tokens scan_tokens(struct Document *doc) {
-  free_tokens(doc);
-  struct TokenLine **lines = (struct TokenLine **)xmalloc(doc->len * sizeof(struct TokenLine *));
-  for (int i = 0; i < doc->len; i++) {
-    lines[i] = (struct TokenLine *)xcalloc(1, sizeof(struct TokenLine));
+bool is_at_end(struct Lexer *lexer) { return lexer->curr >= lexer->doc->buf[lexer->doc->len - 1]->len && lexer->line >= lexer->doc->len - 1; }
+
+void free_tokens(struct Document *doc) {
+  if (doc->tokens.buf) {
+    for (int i = 0; i < doc->tokens.len; i++) {
+      free(doc->tokens.buf[i]);
+    }
+    free(doc->tokens.buf);
   }
-  struct Lexer lexer = {0, 0, 0, doc->len, lines, doc};
-  while (!is_at_end(&lexer)) {
-    lexer.start = lexer.curr;
-    scan_token(&lexer);
-  }
-  return (struct Tokens){lexer.lines, lexer.len};
+  doc->tokens = (struct Tokens){NULL, 0};
+}
+
+char peek(struct Lexer *lexer) {
+  if (is_at_end(lexer)) return '\0';
+  struct Line *line = lexer->doc->buf[lexer->line];
+  return line->buf[lexer->curr];
 }
 
 char advance(struct Lexer *lexer) {
@@ -34,12 +38,6 @@ char advance(struct Lexer *lexer) {
     line = lexer->doc->buf[lexer->line];
   }
   return line->buf[lexer->curr++];
-}
-
-char peek(struct Lexer *lexer) {
-  if (is_at_end(lexer)) return '\0';
-  struct Line *line = lexer->doc->buf[lexer->line];
-  return line->buf[lexer->curr];
 }
 
 char peek_next(struct Lexer *lexer) {
@@ -54,34 +52,17 @@ char peek_prev(struct Lexer *lexer) {
   return line->buf[lexer->curr - 1];
 }
 
-void scan_token(struct Lexer *lexer) {
-  char ch = advance(lexer);
-  switch (ch) {
-  case '(':
-  case ')':
-  case '[':
-  case ']':
-  case '{':
-  case '}':
-    add_token(lexer, TOKEN_DELIMITER);
-    break;
-
-  case '#':
-    scan_directive(lexer);
-    break;
-
-  case '\"':
-  case '\'':
-    scan_quoted_literal(lexer, ch);
-    break;
-
-  default:
-    if (isdigit(ch)) {
-      scan_number_literal(lexer);
-    } else if (IS_ALPHA(ch)) {
-      scan_identifier(lexer);
-    }
+void add_token(struct Lexer *lexer, enum TokenGroup group) {
+  struct TokenLine *line = lexer->lines[lexer->line];
+  line->len++;
+  if (line->len >= line->size) {
+    line->size = line->len + ADDITIONAL_REALLOCATION;
+    line->buf = (struct Token *)xrealloc(line->buf, line->size * sizeof(struct Token));
   }
+  struct Token *token = &line->buf[line->len - 1];
+  token->group = group;
+  token->start = lexer->start;
+  token->len = lexer->curr - lexer->start;
 }
 
 void scan_quoted_literal(struct Lexer *lexer, char delimiter) {
@@ -151,27 +132,46 @@ void scan_identifier(struct Lexer *lexer) {
   if (group != -1) add_token(lexer, group);
 }
 
-void add_token(struct Lexer *lexer, enum TokenGroup group) {
-  struct TokenLine *line = lexer->lines[lexer->line];
-  line->len++;
-  if (line->len >= line->size) {
-    line->size = line->len + ADDITIONAL_REALLOCATION;
-    line->buf = (struct Token *)xrealloc(line->buf, line->size * sizeof(struct Token));
-  }
-  struct Token *token = &line->buf[line->len - 1];
-  token->group = group;
-  token->start = lexer->start;
-  token->len = lexer->curr - lexer->start;
-}
+void scan_token(struct Lexer *lexer) {
+  char ch = advance(lexer);
+  switch (ch) {
+  case '(':
+  case ')':
+  case '[':
+  case ']':
+  case '{':
+  case '}':
+    add_token(lexer, TOKEN_DELIMITER);
+    break;
 
-void free_tokens(struct Document *doc) {
-  if (doc->tokens.buf) {
-    for (int i = 0; i < doc->tokens.len; i++) {
-      free(doc->tokens.buf[i]);
+  case '#':
+    scan_directive(lexer);
+    break;
+
+  case '\"':
+  case '\'':
+    scan_quoted_literal(lexer, ch);
+    break;
+
+  default:
+    if (isdigit(ch)) {
+      scan_number_literal(lexer);
+    } else if (IS_ALPHA(ch)) {
+      scan_identifier(lexer);
     }
-    free(doc->tokens.buf);
   }
-  doc->tokens = (struct Tokens){NULL, 0};
 }
 
-bool is_at_end(struct Lexer *lexer) { return lexer->curr >= lexer->doc->buf[lexer->doc->len - 1]->len && lexer->line >= lexer->doc->len - 1; }
+struct Tokens scan_tokens(struct Document *doc) {
+  free_tokens(doc);
+  struct TokenLine **lines = (struct TokenLine **)xmalloc(doc->len * sizeof(struct TokenLine *));
+  for (int i = 0; i < doc->len; i++) {
+    lines[i] = (struct TokenLine *)xcalloc(1, sizeof(struct TokenLine));
+  }
+  struct Lexer lexer = {0, 0, 0, doc->len, lines, doc};
+  while (!is_at_end(&lexer)) {
+    lexer.start = lexer.curr;
+    scan_token(&lexer);
+  }
+  return (struct Tokens){lexer.lines, lexer.len};
+}

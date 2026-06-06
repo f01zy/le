@@ -1,6 +1,10 @@
 #include "mappings.h"
 #include <string.h>
 
+#define X(name, desc, mapping) void cmd_##name(struct Context *ctx);
+COMMANDS_LIST
+#undef X
+
 static struct Mapping mappings_list[] = {
 #define X(name, desc, mapping) {mapping, desc, cmd_##name},
     COMMANDS_LIST
@@ -172,13 +176,17 @@ void exec_mapping(struct Context *ctx) {
     char buf[MAX_BUFFER_SIZE];
     get_selected_buffer(doc, buf, sizeof(buf));
     enum EditorMode mode = EDITOR_MODE_NORMAL;
-    if (dinamic_mapping.op == 'd') remove_range(doc, c);
-    if (dinamic_mapping.op == 'c') {
+    if (dinamic_mapping.op == 'd') {
       remove_range(doc, c);
+      doc->pos.x = MIN(doc->pos.x, get_max_x(doc->buf[doc->pos.y]));
+    }
+    if (dinamic_mapping.op == 'c') {
       mode = EDITOR_MODE_INSERT;
+      remove_range(doc, c);
+      doc->pos.x = MIN(doc->pos.x, get_max_x(doc->buf[doc->pos.y]));
     }
     if (ctx->mode == EDITOR_MODE_VISUAL) {
-      doc->pos.x = MIN(doc->buf[doc->selected.y]->len - 1, doc->selected.x);
+      doc->pos.x = MIN(get_max_x(doc->buf[doc->selected.y]), doc->selected.x);
       doc->pos.y = doc->selected.y;
     }
     copy_to_clipboard(buf);

@@ -28,12 +28,7 @@ struct Mapping {
   X(toggle_code_highlighting, "Toggle code highlighting", " h")                                                                                                \
   X(toggle_line_numbers, "Toggle line numbers", " n")
 
-#define X(name, desc, mapping) void cmd_##name(struct Context *ctx);
-COMMANDS_LIST
-#undef X
-
 void exec_mapping(struct Context *ctx);
-void add_mapping_node(struct Context *ctx, struct MappingNode *head, struct Mapping map);
 void init_mappings(struct Context *ctx);
 
 #endif
