@@ -5,9 +5,16 @@
 #include "service.h"
 
 struct Command {
-  const char *cmd;
+  const char *fullname;
+  const char *shortname;
   void (*act)(struct Context *ctx, char *token);
 };
+
+#define COMMANDS_LIST                                                                                                                                          \
+  X(edit, e)                                                                                                                                                   \
+  X(quit, q)                                                                                                                                                   \
+  X(write, w)                                                                                                                                                  \
+  X(write_quit, wq)
 
 void handle_command(struct Context *ctx);
 

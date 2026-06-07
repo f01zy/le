@@ -2,6 +2,7 @@
 #include <ctype.h>
 
 void handle_normal_mode(struct Context *ctx, int ch) {
+  if (ch < ALPHABET_MIN || ch > ALPHABET_MAX) return;
   if (ctx->mapping.len < sizeof(ctx->mapping.buf)) {
     ctx->mapping.buf[ctx->mapping.len++] = ch;
     ctx->mapping.buf[ctx->mapping.len] = '\0';
@@ -56,7 +57,7 @@ void handle_command_mode(struct Context *ctx, char ch) {
     break;
 
   default:
-    if (ch >= 32 && ch <= 126 && ctx->status.cmd.len < sizeof(ctx->status.cmd.buf) - 1) {
+    if (ch >= ALPHABET_MIN && ch <= ALPHABET_MAX && ctx->status.cmd.len < sizeof(ctx->status.cmd.buf) - 1) {
       ctx->status.cmd.buf[ctx->status.cmd.len++] = ch;
       ctx->status.cmd.buf[ctx->status.cmd.len] = '\0';
     }

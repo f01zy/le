@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "lexer.h"
+#include "types.h"
 
 static const char *keywords[] = {
     "if", "else", "switch", "case", "default", "while", "do", "for", "break", "continue", "return", "goto", "sizeof", "typedef",
@@ -132,6 +133,19 @@ void scan_identifier(struct Lexer *lexer) {
   if (group != -1) add_token(lexer, group);
 }
 
+void scan_comment(struct Lexer *lexer) {
+  if (peek(lexer) == '/') {
+    lexer->line++;
+    return;
+  }
+  if (peek(lexer) == '*') {
+    advance(lexer);
+    while (peek(lexer) != '*' && peek_next(lexer) != '/') {
+      advance(lexer);
+    }
+  }
+}
+
 void scan_token(struct Lexer *lexer) {
   char ch = advance(lexer);
   switch (ch) {
@@ -144,11 +158,15 @@ void scan_token(struct Lexer *lexer) {
     add_token(lexer, TOKEN_DELIMITER);
     break;
 
+  case '/':
+    scan_comment(lexer);
+    break;
+
   case '#':
     scan_directive(lexer);
     break;
 
-  case '\"':
+  case '"':
   case '\'':
     scan_quoted_literal(lexer, ch);
     break;

@@ -4,12 +4,12 @@
 #include <string.h>
 
 #define X(name, desc, mapping) void cmd_##name(struct Context *ctx);
-COMMANDS_LIST
+MAPPINGS_LIST
 #undef X
 
 static struct Mapping mappings_list[] = {
 #define X(name, desc, mapping) {mapping, desc, cmd_##name},
-    COMMANDS_LIST
+    MAPPINGS_LIST
 #undef X
 };
 
@@ -175,6 +175,7 @@ void exec_mapping(struct Context *ctx) {
   case 'd':
   case 'y':
   case 'c': {
+    if (c.ax == -1) break;
     char buf[MAX_BUFFER_SIZE];
     get_selected_buffer(doc, buf, sizeof(buf));
     enum EditorMode mode = EDITOR_MODE_NORMAL;

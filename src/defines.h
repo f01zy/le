@@ -18,6 +18,8 @@
 #define MAPPINGS_COL                5
 #define MAPPINGS_COL_WIDTH          40
 #define MAX_STRING_BUFFER_SIZE      256
+#define ALPHABET_MIN                32
+#define ALPHABET_MAX                126
 
 #define KEY_ENTER                   13
 #define KEY_BACKSPACE               127

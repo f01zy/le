@@ -11,7 +11,7 @@ struct Mapping {
   void (*act)(struct Context *ctx);
 };
 
-#define COMMANDS_LIST                                                                                                                                          \
+#define MAPPINGS_LIST                                                                                                                                          \
   X(toggle_relative_line_numbers, "Toggle relative line numbers", " rn")                                                                                       \
   X(line_start, "Move to start of line", "0")                                                                                                                  \
   X(line_end, "Move to end of line", "$")                                                                                                                      \
