@@ -51,9 +51,7 @@ struct Vec4 get_brace_bounds(struct Document *doc, size_t count, char brace_open
   struct Vec2 left = doc->pos, right = doc->pos;
   size_t left_count = count, right_count = count;
   while (left_count || right_count) {
-    struct Line *line = doc->buf[left.y];
-
-    if (left_count && line->buf[left.x] == brace_open) left_count--;
+    if (left_count && doc->buf[left.y]->buf[left.x] == brace_open) left_count--;
     if (left_count) {
       left.x--;
       if (left.x < 0) {
