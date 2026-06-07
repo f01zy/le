@@ -1,5 +1,17 @@
 #include "text_objects.h"
 
+char get_brace_close(char open) {
+  switch (open) {
+  case '(':
+    return ')';
+  case '[':
+    return ']';
+  case '{':
+    return '}';
+  }
+  return '\0';
+}
+
 enum WordGroup get_char_group(char ch) {
   if (ch == ' ' || ch == '\t' || ch == '\0') return WORD_GROUP_SPACE;
   if (IS_ALPHA(ch)) return WORD_GROUP_ALPHA;
@@ -15,17 +27,10 @@ size_t get_certain_word_len(struct Line *line, enum WordGroup group, size_t star
   return curr - start + 1;
 }
 
-// TODO: немного багованая, надо починить
 struct Vec4 get_word_bounds(struct Document *doc, size_t count) {
   struct Vec2 bounds = doc->pos;
   while (bounds.y < doc->len && count) {
     struct Line *line = doc->buf[bounds.y];
-    if (!line->len) {
-      bounds.y++;
-      bounds.x = 0;
-      count--;
-      continue;
-    }
     enum WordGroup group = get_char_group(line->buf[bounds.x]);
     size_t len = get_certain_word_len(line, group, bounds.x);
     bounds.x += len;
@@ -51,7 +56,10 @@ struct Vec4 get_brace_bounds(struct Document *doc, size_t count, char brace_open
   struct Vec2 left = doc->pos, right = doc->pos;
   size_t left_count = count, right_count = count;
   while (left_count || right_count) {
-    if (left_count && doc->buf[left.y]->buf[left.x] == brace_open) left_count--;
+    struct Line *left_line = doc->buf[left.y], *right_line = doc->buf[right.y];
+
+    if (left_line->buf[left.x] == brace_close) left_count++;
+    if (left_count && left_line->buf[left.x] == brace_open) left_count--;
     if (left_count) {
       left.x--;
       if (left.x < 0) {
@@ -60,17 +68,32 @@ struct Vec4 get_brace_bounds(struct Document *doc, size_t count, char brace_open
       }
     }
 
-    if (right_count && line->buf[right.x] == brace_close) right_count--;
+    if (right_line->buf[right.x] == brace_open) right_count++;
+    if (right_count && right_line->buf[right.x] == brace_close) right_count--;
     if (right_count) {
       right.x++;
-      if (right.x >= line->len) {
+      if (right.x >= right_line->len) {
         right.y++;
         right.x = 0;
       }
     }
   }
 
-  return (struct Vec4){left.x + 1, left.y, right.x - 1, right.y};
+  if (left.x == doc->buf[left.y]->len - 1 && left.y < doc->len - 1) {
+    left.y++;
+    left.x = 0;
+  } else {
+    left.x++;
+  }
+
+  if (!right.x && right.y) {
+    right.y--;
+    right.x = MAX_LINE_X(doc->buf[right.y]->len);
+  } else {
+    right.x--;
+  }
+
+  return (struct Vec4){left.x, left.y, right.x, right.y};
 }
 
 struct Vec4 get_motion_object_bounds(struct Document *doc, enum EditorMode mode, struct DinamicMapping mapping) {
@@ -82,12 +105,10 @@ struct Vec4 get_motion_object_bounds(struct Document *doc, enum EditorMode mode,
     return get_word_bounds(doc, count);
 
   case '(':
-    if (mapping.modifier != 'i' && mapping.modifier != 'a') return (struct Vec4){-1};
-    return get_brace_bounds(doc, count, '(', ')');
-
   case '{':
+  case '[':
     if (mapping.modifier != 'i' && mapping.modifier != 'a') return (struct Vec4){-1};
-    return get_brace_bounds(doc, count, '{', '}');
+    return get_brace_bounds(doc, count, mapping.motion_object, get_brace_close(mapping.motion_object));
 
   default:
     return (struct Vec4){-1};

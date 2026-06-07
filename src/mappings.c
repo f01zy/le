@@ -1,4 +1,6 @@
 #include "mappings.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define X(name, desc, mapping) void cmd_##name(struct Context *ctx);
@@ -178,12 +180,12 @@ void exec_mapping(struct Context *ctx) {
     enum EditorMode mode = EDITOR_MODE_NORMAL;
     if (dinamic_mapping.op == 'd') {
       remove_range(doc, c);
-      doc->pos.x = MIN(doc->pos.x, MAX_LINE_X(doc->buf[doc->pos.y]->len));
+      doc->pos = (struct Vec2){c.ax, c.ay};
     }
     if (dinamic_mapping.op == 'c') {
       mode = EDITOR_MODE_INSERT;
       remove_range(doc, c);
-      doc->pos.x = MIN(doc->pos.x, MAX_LINE_X(doc->buf[doc->pos.y]->len));
+      doc->pos = (struct Vec2){c.ax, c.ay};
     }
     if (ctx->mode == EDITOR_MODE_VISUAL) {
       doc->pos.x = MIN(MAX_LINE_X(doc->buf[doc->selected.y]->len), doc->selected.x);
