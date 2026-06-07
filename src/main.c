@@ -3,6 +3,7 @@
 
 struct Context ctx;
 
+// TODO: заменить в кеймапах строковые литералы на enum
 int main(int argc, char **argv) {
   init_editor(&ctx);
   init_mappings(&ctx);
@@ -52,7 +53,8 @@ int main(int argc, char **argv) {
         handle_dialog_mode(&ctx, ch);
         break;
       }
-      check_offset(doc, ctx.ui, ctx.terminal.size);
+      update_doc_offset(doc, ctx.ui, ctx.terminal.size);
+      if (ch != 'j' && ch != 'k' && ch != '$') update_doc_max_x(doc);
     }
     render(&ctx);
   }

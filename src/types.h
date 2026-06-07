@@ -45,6 +45,10 @@ struct Vec2 {
   int x, y;
 };
 
+struct Vec3 {
+  int x, y, z;
+};
+
 struct Vec4 {
   int ax, ay;
   int bx, by;
@@ -83,7 +87,7 @@ struct Document {
   char *path;
   bool is_changed;
   size_t len, size;
-  struct Vec2 pos;
+  struct Vec3 pos;
   struct Vec2 offset;
   struct Vec2 selected;
   struct Line **buf;

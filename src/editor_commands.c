@@ -16,7 +16,6 @@ static struct Command commands_list[] = {
 void cmd_quit(struct Context *ctx, char *token) {
   for (int i = 0; i < ctx->len; i++) {
     if (ctx->docs[i]->is_changed) {
-      // TODO: добавить нормальную проверку наличия изменений
       unsaved_changes_dialog(ctx, set_flag_to_quit);
       return;
     }
@@ -35,6 +34,7 @@ void cmd_write(struct Context *ctx, char *token) {
   char buf[MAX_BUFFER_SIZE];
   snprintf(buf, sizeof(buf), "\"%s\", %dB written", doc->path, size);
   set_statusline_message(ctx, buf, MESSAGE_INFO);
+  doc->is_changed = false;
 }
 
 void cmd_edit(struct Context *ctx, char *token) {

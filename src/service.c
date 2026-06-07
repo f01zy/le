@@ -144,7 +144,7 @@ void free_resources(struct Context *ctx) {
   free_mappings(ctx->mapping.head);
 }
 
-void check_offset(struct Document *doc, struct UI ui, struct Vec2 size) {
+void update_doc_offset(struct Document *doc, struct UI ui, struct Vec2 size) {
   int width = get_buffer_width(ui, size, doc->len);
   int height = get_buffer_height(ui, size);
 
@@ -160,6 +160,8 @@ void check_offset(struct Document *doc, struct UI ui, struct Vec2 size) {
     doc->offset.y = doc->pos.y - height + 1;
   }
 }
+
+void update_doc_max_x(struct Document *doc) { doc->pos.z = doc->pos.x; }
 
 int getchar_nonblock(int ms) {
   struct pollfd pfd;

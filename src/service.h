@@ -39,7 +39,9 @@ void reset_curr_mapping(struct Context *ctx);
 void copy_to_clipboard(const char *data);
 void clear_cmd(struct Context *ctx);
 void unsaved_changes_dialog(struct Context *ctx, void (*on_confirm)(struct Context *ctx));
-void check_offset(struct Document *doc, struct UI ui, struct Vec2 size);
+
+void update_doc_offset(struct Document *doc, struct UI ui, struct Vec2 size);
+void update_doc_max_x(struct Document *doc);
 
 int getchar_nonblock(int ms);
 

@@ -1,7 +1,7 @@
-#include "mappings.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+
+#include "mappings.h"
+#include <limits.h>
 
 #define X(name, desc, mapping) void cmd_##name(struct Context *ctx);
 MAPPINGS_LIST
@@ -17,58 +17,62 @@ static struct Mapping mappings_list[] = {
 void cmd_up(struct Context *ctx, int count) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
   if (doc->pos.y < count) return;
-  doc->pos.x = MIN(doc->pos.x, MAX_LINE_X(doc->buf[doc->pos.y - count]->len));
   doc->pos.y -= count;
+  if (doc->pos.z == INT_MAX) {
+    doc->pos.x = MAX_LINE_X(doc->buf[doc->pos.y]->len);
+    return;
+  }
+  doc->pos.x = MIN(doc->pos.z, MAX_LINE_X(doc->buf[doc->pos.y]->len));
 }
 
 void cmd_down(struct Context *ctx, int count) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
   if (doc->pos.y + count >= doc->len) return;
-  doc->pos.x = MIN(doc->pos.x, MAX_LINE_X(doc->buf[doc->pos.y + count]->len));
   doc->pos.y += count;
+  if (doc->pos.z == INT_MAX) {
+    doc->pos.x = MAX_LINE_X(doc->buf[doc->pos.y]->len);
+    return;
+  }
+  doc->pos.x = MIN(doc->pos.z, MAX_LINE_X(doc->buf[doc->pos.y]->len));
 }
 
 void cmd_left(struct Context *ctx, int count) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  struct Vec2 pos = doc->pos;
-  while (pos.y >= 0) {
-    struct Line *line = doc->buf[pos.y];
-    if (count > pos.x) {
-      if (!pos.y) {
-        pos.x = 0;
+  while (doc->pos.y >= 0) {
+    struct Line *line = doc->buf[doc->pos.y];
+    if (count > doc->pos.x) {
+      if (!doc->pos.y) {
+        doc->pos.x = 0;
         break;
       }
-      count -= pos.x + 1;
-      pos.x = MAX_LINE_X(doc->buf[pos.y - 1]->len);
-      pos.y--;
+      count -= doc->pos.x + 1;
+      doc->pos.x = MAX_LINE_X(doc->buf[doc->pos.y - 1]->len);
+      doc->pos.y--;
     } else {
-      pos.x -= count;
+      doc->pos.x -= count;
       break;
     }
   }
-  doc->pos = pos;
 }
 
 void cmd_right(struct Context *ctx, int count) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
-  struct Vec2 pos = doc->pos;
-  while (pos.y < doc->len) {
-    struct Line *line = doc->buf[pos.y];
-    size_t len = MAX_LINE_X(line->len) - pos.x;
+  while (doc->pos.y < doc->len) {
+    struct Line *line = doc->buf[doc->pos.y];
+    size_t len = MAX_LINE_X(line->len) - doc->pos.x;
     if (count > len) {
-      if (pos.y == doc->len - 1) {
-        pos.x = MAX_LINE_X(line->len);
+      if (doc->pos.y == doc->len - 1) {
+        doc->pos.x = MAX_LINE_X(line->len);
         break;
       }
       count -= len + 1;
-      pos.x = 0;
-      pos.y++;
+      doc->pos.x = 0;
+      doc->pos.y++;
     } else {
-      pos.x += count;
+      doc->pos.x += count;
       break;
     }
   }
-  doc->pos = pos;
 }
 
 // Lines
@@ -80,6 +84,7 @@ void cmd_line_start(struct Context *ctx) {
 void cmd_line_end(struct Context *ctx) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
   doc->pos.x = MAX_LINE_X(doc->buf[doc->pos.y]->len);
+  doc->pos.z = INT_MAX;
 }
 
 // Documents
@@ -181,16 +186,16 @@ void exec_mapping(struct Context *ctx) {
     enum EditorMode mode = EDITOR_MODE_NORMAL;
     if (dinamic_mapping.op == 'd') {
       remove_range(doc, c);
-      doc->pos = (struct Vec2){c.ax, c.ay};
+      doc->pos = (struct Vec3){c.ax, c.ay, c.ax};
     }
     if (dinamic_mapping.op == 'c') {
       mode = EDITOR_MODE_INSERT;
       remove_range(doc, c);
-      doc->pos = (struct Vec2){c.ax, c.ay};
+      doc->pos = (struct Vec3){c.ax, c.ay, c.ax};
     }
     if (ctx->mode == EDITOR_MODE_VISUAL) {
-      doc->pos.x = MIN(MAX_LINE_X(doc->buf[doc->selected.y]->len), doc->selected.x);
-      doc->pos.y = doc->selected.y;
+      doc->pos.y = MIN(doc->pos.y, doc->selected.y);
+      doc->pos.x = MIN(MAX_LINE_X(doc->buf[doc->pos.y]->len), doc->selected.x);
     }
     copy_to_clipboard(buf);
     set_editor_mode(ctx, mode);
