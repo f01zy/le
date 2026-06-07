@@ -43,6 +43,7 @@ void unsaved_changes_dialog(struct Context *ctx, void (*on_confirm)(struct Conte
 void update_doc_offset(struct Document *doc, struct UI ui, struct Vec2 size);
 void update_doc_max_x(struct Document *doc);
 
+bool is_sticky_motion(char ch);
 int getchar_nonblock(int ms);
 
 #endif

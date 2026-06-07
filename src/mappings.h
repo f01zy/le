@@ -12,21 +12,20 @@ struct Mapping {
 };
 
 #define MAPPINGS_LIST                                                                                                                                          \
-  X(toggle_relative_line_numbers, "Toggle relative line numbers", " rn")                                                                                       \
-  X(line_start, "Move to start of line", "0")                                                                                                                  \
-  X(line_end, "Move to end of line", "$")                                                                                                                      \
-  X(doc_start, "Move to start of document", "gg")                                                                                                              \
-  X(doc_end, "Move to end of document", "G")                                                                                                                   \
-  X(doc_next, "Move to next document", "\t")                                                                                                                   \
-  X(doc_prev, "Move to previous document", KEY_SHIFT_TAB)                                                                                                      \
-  X(doc_new, "New document", " dn")                                                                                                                            \
-  X(doc_close, "Close document", " dc")                                                                                                                        \
-  X(insert_mode_prev, "Enable insert mode", "i")                                                                                                               \
-  X(insert_mode_next, "Enable insert mode", "a")                                                                                                               \
-  X(command_mode, "Enable command mode", ":")                                                                                                                  \
-  X(visual_mode, "Enable visual mode", "v")                                                                                                                    \
-  X(toggle_code_highlighting, "Toggle code highlighting", " h")                                                                                                \
-  X(toggle_line_numbers, "Toggle line numbers", " n")
+  X(line_start, "Move to start of line", MAPPING_LINE_START)                                                                                                   \
+  X(doc_start, "Move to start of document", MAPPING_DOC_START)                                                                                                 \
+  X(doc_end, "Move to end of document", MAPPING_DOC_END)                                                                                                       \
+  X(doc_next, "Move to next document", MAPPING_DOC_PREV)                                                                                                       \
+  X(doc_prev, "Move to previous document", MAPPING_DOC_NEXT)                                                                                                   \
+  X(doc_new, "New document", MAPPING_DOC_NEW)                                                                                                                  \
+  X(doc_close, "Close document", MAPPING_DOC_CLOSE)                                                                                                            \
+  X(insert_mode_prev, "Enable insert mode", MAPPING_INSERT_MODE_PREV)                                                                                          \
+  X(insert_mode_next, "Enable insert mode", MAPPING_INSERT_MODE_NEXT)                                                                                          \
+  X(command_mode, "Enable command mode", MAPPING_COMMAND_MODE)                                                                                                 \
+  X(visual_mode, "Enable visual mode", MAPPING_VISUAL_MODE)                                                                                                    \
+  X(toggle_code_highlighting, "Toggle code highlighting", MAPPING_TOGGLE_CODE_HIGHLIGHTING)                                                                    \
+  X(toggle_line_numbers, "Toggle line numbers", MAPPING_TOGGLE_LINE_NUMBERS)                                                                                   \
+  X(toggle_relative_line_numbers, "Toggle relative line numbers", MAPPING_TOGGLE_RELATIVE_LINE_NUMBERS)
 
 void exec_mapping(struct Context *ctx);
 void init_mappings(struct Context *ctx);

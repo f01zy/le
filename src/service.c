@@ -83,6 +83,8 @@ void set_statusline_dialog(struct Context *ctx, const char *question, void (*on_
   ctx->status.dialog.on_deny = on_deny;
 }
 
+void set_statusline_mode(struct Context *ctx, enum StatusMode mode) { ctx->status.mode = mode; }
+
 void init_tokens(struct Document *doc) { doc->tokens = scan_tokens(doc); }
 
 void set_editor_mode(struct Context *ctx, enum EditorMode mode) {
@@ -172,6 +174,8 @@ int getchar_nonblock(int ms) {
   return -1;
 }
 
+bool is_sticky_motion(char ch) { return (ch == MAPPING_UP || ch == MAPPING_DOWN || ch == MAPPING_LINE_END); }
+
 void unsaved_changes_dialog(struct Context *ctx, void (*on_confirm)(struct Context *ctx)) {
   set_statusline_dialog(ctx, "You have unsaved changes. Are you sure (Y/N): ", on_confirm, NULL);
 }
@@ -186,8 +190,8 @@ int64_t string_to_number(const char *buf, size_t len) {
   return ans;
 }
 
-static const char *motion_operators = "hjklwWeEbB";
-static const char *modifier_operators = "dyc";
+static const char motion_operators[] = {MAPPING_LEFT, MAPPING_RIGHT, MAPPING_DOWN, MAPPING_UP, MAPPING_LINE_END};
+static const char modifier_operators[] = {MAPPING_DELETE, MAPPING_YANK, MAPPING_CHANGE};
 
 enum ParsingStatus parse_dinamic_mapping(struct Context *ctx, struct DinamicMapping *ans) {
   enum ParseDinamicMappingState state = STATE_MAPPING_GLOBAL_COUNT;
@@ -217,11 +221,11 @@ enum ParsingStatus parse_dinamic_mapping(struct Context *ctx, struct DinamicMapp
       break;
     case STATE_MAPPING_OPERATOR:
       ans->op = ch;
-      for (int i = 0; i < strlen(motion_operators); i++) {
+      for (int i = 0; i < sizeof(motion_operators); i++) {
         if (motion_operators[i] == ch) return PARSING_STATUS_SUCCESS;
       }
       bool is_modifier_operator = false;
-      for (int i = 0; i < strlen(modifier_operators); i++) {
+      for (int i = 0; i < sizeof(modifier_operators); i++) {
         if (modifier_operators[i] == ch) {
           is_modifier_operator = true;
           break;
@@ -289,5 +293,3 @@ void copy_to_clipboard(const char *data) {
   }
 #endif
 }
-
-void set_statusline_mode(struct Context *ctx, enum StatusMode mode) { ctx->status.mode = mode; }

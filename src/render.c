@@ -62,7 +62,11 @@ void render_line_numbers(struct Context *ctx, struct Cell **frame) {
     int y = doc->offset.y + i;
     if (y >= doc->len) {
       for (int j = 0; j < width; j++) {
-        frame[i + offsetY][j] = CELL(' ');
+        if (j) {
+          frame[i + offsetY][j] = CELL(' ');
+          continue;
+        }
+        frame[i + offsetY][j] = CELL('~');
       }
       continue;
     };

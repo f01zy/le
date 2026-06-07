@@ -81,8 +81,11 @@ void cmd_line_start(struct Context *ctx) {
   doc->pos.x = 0;
 }
 
-void cmd_line_end(struct Context *ctx) {
+void cmd_line_end(struct Context *ctx, size_t count) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
+  size_t new_y = doc->pos.y + count - 1;
+  if (!count || new_y >= doc->len) return;
+  doc->pos.y = new_y;
   doc->pos.x = MAX_LINE_X(doc->buf[doc->pos.y]->len);
   doc->pos.z = INT_MAX;
 }
@@ -177,18 +180,18 @@ void exec_mapping(struct Context *ctx) {
   size_t count = dinamic_mapping.global_count;
 
   switch (dinamic_mapping.op) {
-  case 'd':
-  case 'y':
-  case 'c': {
+  case MAPPING_DELETE:
+  case MAPPING_YANK:
+  case MAPPING_CHANGE: {
     if (c.ax == -1) break;
     char buf[MAX_BUFFER_SIZE];
     get_selected_buffer(doc, buf, sizeof(buf));
     enum EditorMode mode = EDITOR_MODE_NORMAL;
-    if (dinamic_mapping.op == 'd') {
+    if (dinamic_mapping.op == MAPPING_DELETE) {
       remove_range(doc, c);
       doc->pos = (struct Vec3){c.ax, c.ay, c.ax};
     }
-    if (dinamic_mapping.op == 'c') {
+    if (dinamic_mapping.op == MAPPING_CHANGE) {
       mode = EDITOR_MODE_INSERT;
       remove_range(doc, c);
       doc->pos = (struct Vec3){c.ax, c.ay, c.ax};
@@ -202,18 +205,20 @@ void exec_mapping(struct Context *ctx) {
     break;
   }
 
-  case 'l':
+  case MAPPING_RIGHT:
     cmd_right(ctx, count);
     break;
-  case 'h':
+  case MAPPING_LEFT:
     cmd_left(ctx, count);
     break;
-  case 'j':
+  case MAPPING_DOWN:
     cmd_down(ctx, count);
     break;
-  case 'k':
+  case MAPPING_UP:
     cmd_up(ctx, count);
     break;
+  case MAPPING_LINE_END:
+    cmd_line_end(ctx, count);
   }
 
   init_tokens(doc);
