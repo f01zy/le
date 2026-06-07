@@ -25,7 +25,8 @@
 #define KEY_BACKSPACE                        127
 #define KEY_ESCAPE                           27
 #define KEY_TAB                              9
-#define KEY_SHIFT_TAB                        "\x1b[Z"
+#define KEY_CTRL_L                           "\x0c"
+#define KEY_CTRL_H                           "\x08"
 
 #define ANSI_RESET_SCREEN                    write(STDOUT_FILENO, "\x1b[2J", 4)
 #define ANSI_RESET_LINE_FROM_CURSOR          write(STDOUT_FILENO, "\x1b[0K", 4)
@@ -47,8 +48,8 @@
 #define MAPPING_LINE_START                   "0"
 #define MAPPING_DOC_START                    "gg"
 #define MAPPING_DOC_END                      "G"
-#define MAPPING_DOC_PREV                     "\t"
-#define MAPPING_DOC_NEXT                     KEY_SHIFT_TAB
+#define MAPPING_DOC_NEXT                     KEY_CTRL_L
+#define MAPPING_DOC_PREV                     KEY_CTRL_H
 #define MAPPING_DOC_NEW                      " dn"
 #define MAPPING_DOC_CLOSE                    " dc"
 #define MAPPING_INSERT_MODE_PREV             "i"

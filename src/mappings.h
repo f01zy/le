@@ -15,8 +15,8 @@ struct Mapping {
   X(line_start, "Move to start of line", MAPPING_LINE_START)                                                                                                   \
   X(doc_start, "Move to start of document", MAPPING_DOC_START)                                                                                                 \
   X(doc_end, "Move to end of document", MAPPING_DOC_END)                                                                                                       \
-  X(doc_next, "Move to next document", MAPPING_DOC_PREV)                                                                                                       \
-  X(doc_prev, "Move to previous document", MAPPING_DOC_NEXT)                                                                                                   \
+  X(doc_next, "Move to next document", MAPPING_DOC_NEXT)                                                                                                       \
+  X(doc_prev, "Move to previous document", MAPPING_DOC_PREV)                                                                                                   \
   X(doc_new, "New document", MAPPING_DOC_NEW)                                                                                                                  \
   X(doc_close, "Close document", MAPPING_DOC_CLOSE)                                                                                                            \
   X(insert_mode_prev, "Enable insert mode", MAPPING_INSERT_MODE_PREV)                                                                                          \

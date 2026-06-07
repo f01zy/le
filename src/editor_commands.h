@@ -11,10 +11,12 @@ struct Command {
 };
 
 #define COMMANDS_LIST                                                                                                                                          \
-  X(edit, e)                                                                                                                                                   \
-  X(quit, q)                                                                                                                                                   \
-  X(write, w)                                                                                                                                                  \
-  X(write_quit, wq)
+  X(edit, "e")                                                                                                                                                 \
+  X(quit, "q")                                                                                                                                                 \
+  X(quit_force, "q!")                                                                                                                                          \
+  X(write, "w")                                                                                                                                                \
+  X(write_quit, "wq")                                                                                                                                          \
+  X(write_all, "wa")
 
 void handle_command(struct Context *ctx);
 

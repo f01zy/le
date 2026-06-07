@@ -109,7 +109,7 @@ void cmd_doc_prev(struct Context *ctx) {
 }
 
 void cmd_doc_next(struct Context *ctx) {
-  if (ctx->curr_doc == ctx->len - 1) return;
+  if (ctx->curr_doc >= ctx->len - 1) return;
   ctx->curr_doc++;
 }
 

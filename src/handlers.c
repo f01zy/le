@@ -2,7 +2,6 @@
 #include <ctype.h>
 
 void handle_normal_mode(struct Context *ctx, int ch) {
-  if (ch < ALPHABET_MIN || ch > ALPHABET_MAX) return;
   if (ctx->mapping.len < sizeof(ctx->mapping.buf)) {
     ctx->mapping.buf[ctx->mapping.len++] = ch;
     ctx->mapping.buf[ctx->mapping.len] = '\0';

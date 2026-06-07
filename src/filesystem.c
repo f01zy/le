@@ -19,10 +19,10 @@ bool load_doc_data(struct Document *doc, char *path) {
   return true;
 }
 
-int save_doc(struct Document *doc) {
+size_t save_doc(struct Document *doc) {
   char buf[MAX_BUFFER_SIZE];
   FILE *file = fopen(doc->path, "w");
-  if (!file) return -1;
+  if (!file) return 0;
   int size = 0;
   for (int i = 0; i < doc->len; i++) {
     struct Line *line = doc->buf[i];
