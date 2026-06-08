@@ -1,9 +1,7 @@
 #ifndef RENDER_INCLUDED
 #define RENDER_INCLUDED
 
-#include "path.h"
-#include "selected.h"
-#include "terminal.h"
+#include "types.h"
 
 void render(struct Context *ctx);
 

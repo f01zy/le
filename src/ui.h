@@ -47,13 +47,6 @@ enum BackgroundColor {
   BACKGROUND_GRAY = 8,
 };
 
-struct Cell {
-  char ch;
-  enum RenderMode mode;
-  enum ForegroundColor fg;
-  enum BackgroundColor bg;
-};
-
 int get_statusline_margin(struct UI ui);
 int get_tabmenu_margin(struct UI ui);
 int get_line_number_margin(struct UI ui, size_t doc_len);

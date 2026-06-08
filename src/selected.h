@@ -1,7 +1,6 @@
 #ifndef SELECTED_INCLUDED
 #define SELECTED_INCLUDED
 
-#include "memory.h"
 #include "types.h"
 
 void get_selected_coordinates(struct Vec4 *c);

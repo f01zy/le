@@ -1,5 +1,8 @@
+#include "buffer.h"
 #include "handlers.h"
+#include "mappings.h"
 #include "render.h"
+#include "service.h"
 
 struct Context ctx;
 
@@ -8,7 +11,7 @@ int main(int argc, char **argv) {
   init_mappings(&ctx);
   struct Document *doc = create_doc(&ctx);
   if (argc == 2) {
-    load_doc_data(doc, argv[1]);
+    init_doc(doc, argv[1]);
     init_tokens(doc);
   }
   render(&ctx);

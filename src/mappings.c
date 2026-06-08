@@ -1,7 +1,11 @@
+#include <limits.h>
 #include <string.h>
 
+#include "buffer.h"
 #include "mappings.h"
-#include <limits.h>
+#include "memory.h"
+#include "selected.h"
+#include "service.h"
 
 #define X(name, desc, mapping) void cmd_##name(struct Context *ctx);
 MAPPINGS_LIST

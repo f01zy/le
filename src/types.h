@@ -7,7 +7,12 @@
 
 #include "defines.h"
 
-struct Context;
+// Enums
+
+enum EntityType {
+  ENTITY_FILE,
+  ENTITY_DIRECTORY,
+};
 
 enum StatusMode {
   STATUS_MODE_NORMAL,
@@ -41,6 +46,24 @@ enum EditorMode {
   EDITOR_MODE_VISUAL,
 };
 
+struct Context;
+
+// File tree
+
+struct FileTreeEntities {
+  struct FileTreeEntity **buf;
+  size_t len;
+};
+
+struct FileTreeEntity {
+  char *path;
+  bool is_open;
+  enum EntityType type;
+  struct FileTreeEntities children;
+};
+
+// Vectors
+
 struct Vec2 {
   int x, y;
 };
@@ -53,6 +76,8 @@ struct Vec4 {
   int ax, ay;
   int bx, by;
 };
+
+// Lexer
 
 struct Token {
   enum TokenGroup group;
@@ -78,6 +103,8 @@ struct Tokens {
   size_t len;
 };
 
+// Document
+
 struct Line {
   char *buf;
   size_t len, size;
@@ -94,12 +121,22 @@ struct Document {
   struct Tokens tokens;
 };
 
+// Context
+
 struct UI {
   bool is_line_numbers;
   bool is_relative_line_numbers;
   bool is_statusline;
   bool is_tabmenu;
   bool is_code_highlighting;
+};
+
+struct MappingNode {
+  int ch;
+  const char *desc;
+  void (*act)(struct Context *ctx);
+  struct MappingNode **nodes;
+  size_t len;
 };
 
 struct StatusLine {
@@ -122,22 +159,6 @@ struct StatusLine {
   } cmd;
 };
 
-struct MappingNode {
-  int ch;
-  const char *desc;
-  void (*act)(struct Context *ctx);
-  struct MappingNode **nodes;
-  size_t len;
-};
-
-struct DinamicMapping {
-  size_t global_count;
-  char op;
-  size_t op_count;
-  char modifier;
-  char motion_object;
-};
-
 struct Context {
   bool is_need_quit;
   size_t len, size, curr_doc;
@@ -145,6 +166,11 @@ struct Context {
   struct StatusLine status;
   struct UI ui;
   enum EditorMode mode;
+
+  struct {
+    char work_dir[MAX_STRING_BUFFER_SIZE];
+    struct FileTreeEntities children;
+  } file_tree;
 
   struct {
     struct termios conf;

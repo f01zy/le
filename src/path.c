@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "defines.h"
+#include "memory.h"
 #include "path.h"
 
 void get_real_path(const char *path, size_t len, char *out, size_t max_size) {

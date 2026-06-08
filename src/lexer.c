@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "lexer.h"
-#include "types.h"
+#include "memory.h"
 
 static const char *keywords[] = {
     "if", "else", "switch", "case", "default", "while", "do", "for", "break", "continue", "return", "goto", "sizeof", "typedef",

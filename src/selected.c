@@ -1,4 +1,5 @@
 #include "selected.h"
+#include "memory.h"
 
 void get_selected_coordinates(struct Vec4 *c) {
   int is_single_line = (c->ay == c->by);

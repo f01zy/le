@@ -1,8 +1,7 @@
 #ifndef HANDLERS_INCLUDED
 #define HANDLERS_INCLUDED
 
-#include "editor_commands.h"
-#include "mappings.h"
+#include "types.h"
 
 void handle_dialog_mode(struct Context *ctx, char ch);
 void handle_command_mode(struct Context *ctx, char ch);

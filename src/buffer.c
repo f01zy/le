@@ -3,6 +3,10 @@
 #include <string.h>
 
 #include "buffer.h"
+#include "filesystem.h"
+#include "memory.h"
+#include "path.h"
+#include "selected.h"
 
 struct Document *create_doc(struct Context *ctx) {
   struct Document *doc = (struct Document *)xcalloc(1, sizeof(struct Document));
@@ -16,7 +20,21 @@ struct Document *create_doc(struct Context *ctx) {
   return doc;
 }
 
-void set_doc_path(struct Document *doc, char *path) {
+bool init_doc(struct Document *doc, const char *path) {
+  struct GetDocDataRes res = get_doc_data(path);
+  if (!res.data) return false;
+  set_doc_path(doc, path);
+  // TODO: Если до этого был открыт другой файл, надо очистить текущий буфер
+  doc->buf = res.data;
+  doc->len = res.len;
+  doc->offset.x = doc->offset.y = 0;
+  doc->pos.x = doc->pos.y = 0;
+  return true;
+}
+
+size_t save_doc(struct Document *doc) { return save_doc_data(doc->path, doc->buf, doc->len); }
+
+void set_doc_path(struct Document *doc, const char *path) {
   if (!path) return;
   free(doc->path);
   char cwd[MAX_BUFFER_SIZE];

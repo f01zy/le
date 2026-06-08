@@ -1,10 +1,8 @@
 #ifndef SERVICE_INCLUDED
 #define SERVICE_INCLUDED
 
+#include "text_objects.h"
 #include <stdint.h>
-
-#include "lexer.h"
-#include "terminal.h"
 
 enum ParseDinamicMappingState {
   STATE_MAPPING_GLOBAL_COUNT,

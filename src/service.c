@@ -1,9 +1,7 @@
-#include <ctype.h>
 #include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 #ifdef WIN32
 #include "windows.h"
@@ -11,29 +9,17 @@
 #include <sys/ioctl.h>
 #endif
 
+#include "frame.h"
+#include "lexer.h"
 #include "service.h"
+#include "terminal.h"
 
-struct Cell **create_frame(struct Vec2 size) {
-  struct Cell **frame = (struct Cell **)xmalloc(size.y * sizeof(struct Cell *));
-  for (int i = 0; i < size.y; i++) {
-    frame[i] = (struct Cell *)xcalloc(size.x, sizeof(struct Cell));
-  }
-  return frame;
-}
-
-struct Vec2 get_teminal_size() {
-#ifdef WIN32
-  CONSOLE_SCREEN_BUFFER_INFO csbi;
-  int ret;
-  ret = GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-  if (ret) return (struct Vec2){csbi.dwSize.X, csbi.dwSize.Y};
-  exit(1);
-#else
-  struct winsize size;
-  ioctl(STDIN_FILENO, TIOCGWINSZ, &size);
-  return (struct Vec2){size.ws_col, size.ws_row};
-#endif
-}
+// void init_file_tree(struct Context *ctx) {
+//   char cwd[MAX_STRING_BUFFER_SIZE];
+//   if (!get_curr_dir(cwd, sizeof(cwd))) return;
+//   strncpy(ctx->file_tree.work_dir, cwd, strlen(cwd));
+//   ctx->file_tree.children = init_file_tree_folder(cwd);
+// }
 
 void init_context(struct Context *ctx) {
   gettimeofday(&ctx->frame.prev_time, NULL);
@@ -44,7 +30,7 @@ void init_context(struct Context *ctx) {
       .is_tabmenu = true,
       .is_code_highlighting = true,
   };
-  ctx->terminal.size = get_teminal_size();
+  ctx->terminal.size = get_terminal_size();
   ctx->frame.curr = create_frame(ctx->terminal.size);
   ctx->frame.prev = create_frame(ctx->terminal.size);
   ctx->ui = ui;

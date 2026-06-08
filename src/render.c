@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
+#include "frame.h"
+#include "path.h"
 #include "render.h"
+#include "selected.h"
+#include "terminal.h"
 
 void render_line(struct Cell *buf, size_t len, int y) {
   move_cursor_yx(y, 0);

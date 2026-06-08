@@ -1,5 +1,8 @@
 #include "handlers.h"
-#include <ctype.h>
+#include "buffer.h"
+#include "editor_commands.h"
+#include "mappings.h"
+#include "service.h"
 
 void handle_normal_mode(struct Context *ctx, int ch) {
   if (ctx->mapping.len < sizeof(ctx->mapping.buf)) {

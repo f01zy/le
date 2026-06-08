@@ -22,6 +22,8 @@ set(SOURCE
   ./src/path.c
   ./src/selected.c
   ./src/text_objects.c
+  ./src/frame.c
+  ./src/file_tree.c
 )
 
 add_executable(le ${SOURCE})

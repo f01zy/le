@@ -1,9 +1,7 @@
 #ifndef BUFFER_INCLUDED
 #define BUFFER_INCLUDED
 
-#include "memory.h"
-#include "path.h"
-#include "selected.h"
+#include "types.h"
 
 enum RemoveResult {
   REMOVE_NOTHING,
@@ -11,9 +9,12 @@ enum RemoveResult {
   REMOVE_LINE,
 };
 
-struct Document *create_doc(struct Context *ctx);
-void set_doc_path(struct Document *doc, char *path);
+void set_doc_path(struct Document *doc, const char *path);
 void remove_doc_path(struct Document *doc);
+
+struct Document *create_doc(struct Context *ctx);
+bool init_doc(struct Document *doc, const char *path);
+size_t save_doc(struct Document *doc);
 void add_line(struct Document *doc, char *data, int y);
 void remove_line(struct Document *doc, int y);
 void write_to_line(struct Document *doc, int y, int x, char ch);

@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "buffer.h"
 #include "editor_commands.h"
+#include "filesystem.h"
+#include "service.h"
 
 #define X(fullname, shortname) void cmd_##fullname(struct Context *ctx, char *token);
 COMMANDS_LIST
@@ -58,10 +61,14 @@ void cmd_write_all(struct Context *ctx, char *token) {
 void cmd_edit(struct Context *ctx, char *token) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
   token = strtok(NULL, " ");
-  bool is_opened = load_doc_data(doc, token);
-  if (!is_opened) {
+  struct GetDocDataRes res = get_doc_data(token);
+  if (!res.data) {
     set_statusline_message(ctx, "Failed to open file", MESSAGE_ERROR);
   } else {
+    set_doc_path(doc, token);
+    // TODO: Если до этого был открыт другой файл, надо очистить текущий буфер
+    doc->buf = res.data;
+    doc->len = res.len;
     doc->offset.x = doc->offset.y = 0;
     doc->pos.x = doc->pos.y = 0;
   }

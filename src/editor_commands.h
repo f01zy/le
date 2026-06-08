@@ -1,8 +1,7 @@
 #ifndef EDITOR_COMMANDS_INCLUDED
 #define EDITOR_COMMANDS_INCLUDED
 
-#include "filesystem.h"
-#include "service.h"
+#include "types.h"
 
 struct Command {
   const char *fullname;
