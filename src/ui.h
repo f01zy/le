@@ -47,12 +47,15 @@ enum BackgroundColor {
   BACKGROUND_GRAY = 8,
 };
 
-int get_statusline_margin(struct UI ui);
-int get_tabmenu_margin(struct UI ui);
-int get_line_number_margin(struct UI ui, size_t doc_len);
+struct Vec2 get_buf_size(struct UI ui, struct Vec2 term_size, size_t doc_len);
+struct Vec2 get_buf_offset(struct UI ui, struct Vec2 term_size, size_t doc_len);
+struct Vec2 get_file_tree_size(struct UI ui, struct Vec2 term_size);
+struct Vec2 get_file_tree_offset(struct UI ui);
+struct Vec2 get_line_numbers_size(struct UI ui, struct Vec2 term_size, size_t doc_len);
+struct Vec2 get_line_numbers_offset(struct UI ui, struct Vec2 term_size, size_t doc_len);
 
-int get_buffer_width(struct UI ui, struct Vec2 size, size_t doc_len);
-int get_buffer_height(struct UI ui, struct Vec2 size);
+int get_statusline_height(struct UI ui);
+int get_tabmenu_height(struct UI ui);
 
 const char *get_editor_mode_label(enum EditorMode mode);
 enum ForegroundColor get_token_foreground(enum TokenGroup group);

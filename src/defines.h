@@ -15,11 +15,12 @@
 
 #define ADDITIONAL_REALLOCATION              16
 #define MAX_BUFFER_SIZE                      8192
-#define MAPPINGS_COL                         5
-#define MAPPINGS_COL_WIDTH                   40
 #define MAX_STRING_BUFFER_SIZE               256
 #define ALPHABET_MIN                         32
 #define ALPHABET_MAX                         126
+#define MAPPINGS_COL                         5
+#define MAPPINGS_COL_WIDTH                   40
+#define FILE_TREE_WIDTH                      30
 
 #define KEY_ENTER                            13
 #define KEY_BACKSPACE                        127
@@ -27,6 +28,7 @@
 #define KEY_TAB                              9
 #define KEY_CTRL_L                           "\x0c"
 #define KEY_CTRL_H                           "\x08"
+#define KEY_CTRL_N                           "\x0e"
 
 #define ANSI_RESET_SCREEN                    write(STDOUT_FILENO, "\x1b[2J", 4)
 #define ANSI_RESET_LINE_FROM_CURSOR          write(STDOUT_FILENO, "\x1b[0K", 4)
@@ -59,6 +61,7 @@
 #define MAPPING_TOGGLE_CODE_HIGHLIGHTING     " h"
 #define MAPPING_TOGGLE_LINE_NUMBERS          " n"
 #define MAPPING_TOGGLE_RELATIVE_LINE_NUMBERS " rn"
+#define MAPPING_TOGGLE_FILE_TREE             KEY_CTRL_N
 
 #define MAX_LINE_X(A)                        ((A) ? (A) - 1 : 0)
 #define MIN(A, B)                            ((A) < (B) ? (A) : (B))

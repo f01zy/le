@@ -50,16 +50,22 @@ struct Context;
 
 // File tree
 
-struct FileTreeEntities {
-  struct FileTreeEntity **buf;
-  size_t len;
-};
-
 struct FileTreeEntity {
   char *path;
-  bool is_open;
   enum EntityType type;
-  struct FileTreeEntities children;
+
+  union {
+    struct {
+      bool is_open;
+      struct FileTreeEntity **children;
+      size_t len;
+    } dir;
+
+    struct {
+      size_t size;
+      bool is_readonly;
+    } file;
+  } as;
 };
 
 // Vectors
@@ -129,6 +135,7 @@ struct UI {
   bool is_statusline;
   bool is_tabmenu;
   bool is_code_highlighting;
+  bool is_file_tree;
 };
 
 struct MappingNode {
@@ -168,8 +175,10 @@ struct Context {
   enum EditorMode mode;
 
   struct {
-    char work_dir[MAX_STRING_BUFFER_SIZE];
-    struct FileTreeEntities children;
+    size_t pos;
+    struct Vec2 offset;
+    struct FileTreeEntity *root;
+    char root_dir[MAX_STRING_BUFFER_SIZE];
   } file_tree;
 
   struct {

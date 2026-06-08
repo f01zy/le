@@ -23,7 +23,8 @@ struct Mapping {
   X(visual_mode, "Enable visual mode", MAPPING_VISUAL_MODE)                                                                                                    \
   X(toggle_code_highlighting, "Toggle code highlighting", MAPPING_TOGGLE_CODE_HIGHLIGHTING)                                                                    \
   X(toggle_line_numbers, "Toggle line numbers", MAPPING_TOGGLE_LINE_NUMBERS)                                                                                   \
-  X(toggle_relative_line_numbers, "Toggle relative line numbers", MAPPING_TOGGLE_RELATIVE_LINE_NUMBERS)
+  X(toggle_relative_line_numbers, "Toggle relative line numbers", MAPPING_TOGGLE_RELATIVE_LINE_NUMBERS)                                                        \
+  X(toggle_file_tree, "Toggle file tree", MAPPING_TOGGLE_FILE_TREE)
 
 void exec_mapping(struct Context *ctx);
 void init_mappings(struct Context *ctx);

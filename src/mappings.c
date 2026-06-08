@@ -165,6 +165,7 @@ void cmd_visual_mode(struct Context *ctx) {
 void cmd_toggle_line_numbers(struct Context *ctx) { ctx->ui.is_line_numbers = !ctx->ui.is_line_numbers; }
 void cmd_toggle_relative_line_numbers(struct Context *ctx) { ctx->ui.is_relative_line_numbers = !ctx->ui.is_relative_line_numbers; }
 void cmd_toggle_code_highlighting(struct Context *ctx) { ctx->ui.is_code_highlighting = !ctx->ui.is_code_highlighting; }
+void cmd_toggle_file_tree(struct Context *ctx) { ctx->ui.is_file_tree = !ctx->ui.is_file_tree; }
 
 // Other
 void exec_mapping(struct Context *ctx) {

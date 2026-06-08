@@ -1,27 +1,57 @@
 #include "ui.h"
 
-int get_line_number_margin(struct UI ui, size_t doc_len) {
-  if (!ui.is_line_numbers) return 0;
-  int margin = 0;
-  while (doc_len) {
-    margin++;
-    doc_len /= 10;
-  }
-  return margin + 1;
+struct Vec2 get_file_tree_size(struct UI ui, struct Vec2 term_size) {
+  int width = ui.is_file_tree ? FILE_TREE_WIDTH : 0;
+  int height = term_size.y - get_tabmenu_height(ui) - get_statusline_height(ui);
+  return (struct Vec2){width, height};
 }
 
-int get_statusline_margin(struct UI ui) {
+struct Vec2 get_file_tree_offset(struct UI ui) {
+  int offsetX = 0;
+  int offsetY = get_tabmenu_height(ui);
+  return (struct Vec2){offsetX, offsetY};
+}
+
+struct Vec2 get_line_numbers_size(struct UI ui, struct Vec2 term_size, size_t doc_len) {
+  int height = term_size.y - get_tabmenu_height(ui) - get_statusline_height(ui);
+  int width = 0;
+  if (ui.is_line_numbers) {
+    while (doc_len) {
+      width++;
+      doc_len /= 10;
+    }
+    width++;
+  }
+  return (struct Vec2){width, height};
+}
+
+struct Vec2 get_line_numbers_offset(struct UI ui, struct Vec2 term_size, size_t doc_len) {
+  int offsetX = get_file_tree_size(ui, term_size).x;
+  int offsetY = get_tabmenu_height(ui);
+  return (struct Vec2){offsetX, offsetY};
+}
+
+struct Vec2 get_buf_size(struct UI ui, struct Vec2 term_size, size_t doc_len) {
+  int width = term_size.x - get_file_tree_size(ui, term_size).x - get_line_numbers_size(ui, term_size, doc_len).x;
+  int height = term_size.y - get_tabmenu_height(ui) - get_statusline_height(ui);
+  return (struct Vec2){width, height};
+}
+
+struct Vec2 get_buf_offset(struct UI ui, struct Vec2 term_size, size_t doc_len) {
+  int offsetX = get_file_tree_size(ui, term_size).x + get_line_numbers_size(ui, term_size, doc_len).x;
+  int offsetY = get_tabmenu_height(ui);
+  return (struct Vec2){offsetX, offsetY};
+}
+
+int get_statusline_height(struct UI ui) {
   if (!ui.is_statusline) return 0;
   return 1;
 }
 
-int get_tabmenu_margin(struct UI ui) {
+int get_tabmenu_height(struct UI ui) {
   if (!ui.is_tabmenu) return 0;
   return 1;
 }
-
-int get_buffer_width(struct UI ui, struct Vec2 size, size_t doc_len) { return size.x - get_line_number_margin(ui, doc_len); }
-int get_buffer_height(struct UI ui, struct Vec2 size) { return size.y - get_tabmenu_margin(ui) - get_statusline_margin(ui); }
 
 enum ForegroundColor get_token_foreground(enum TokenGroup group) {
   switch (group) {
@@ -54,9 +84,7 @@ const char *get_editor_mode_label(enum EditorMode mode) {
     return "INSERT";
   case EDITOR_MODE_VISUAL:
     return "VISUAL";
-    break;
   default:
     return "NORMAL";
-    break;
   }
 }

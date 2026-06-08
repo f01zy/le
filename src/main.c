@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "file_tree.h"
 #include "handlers.h"
 #include "mappings.h"
 #include "render.h"
@@ -9,6 +10,7 @@ struct Context ctx;
 int main(int argc, char **argv) {
   init_editor(&ctx);
   init_mappings(&ctx);
+  init_file_tree(&ctx);
   struct Document *doc = create_doc(&ctx);
   if (argc == 2) {
     init_doc(doc, argv[1]);

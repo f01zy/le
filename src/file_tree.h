@@ -3,6 +3,6 @@
 
 #include "types.h"
 
-struct FileTreeEntities init_file_tree_folder(const char *path);
+void init_file_tree(struct Context *ctx);
 
 #endif

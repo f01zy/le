@@ -6,29 +6,48 @@
 #include "file_tree.h"
 #include "memory.h"
 
-struct FileTreeEntities init_file_tree_folder(const char *path) {
-  DIR *dir = opendir(path);
-  if (!dir) return (struct FileTreeEntities){NULL, 0};
-  struct dirent *ent;
-  struct FileTreeEntity **children;
-  size_t count = 0;
-  while ((ent = readdir(dir))) {
-    if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")) continue;
-    char ent_path[MAX_STRING_BUFFER_SIZE];
-    size_t len = snprintf(ent_path, sizeof(ent_path), "%s/%s", path, ent->d_name);
-    struct stat ent_stat;
-    stat(ent_path, &ent_stat);
-    struct FileTreeEntity *res = (struct FileTreeEntity *)xcalloc(1, sizeof(struct FileTreeEntity));
-    res->path = (char *)xmalloc(len + 1);
-    res->path[len] = '\0';
-    memcpy(res->path, ent_path, len);
-    if (S_ISDIR(ent_stat.st_mode)) {
-      res->type = ENTITY_DIRECTORY;
-    } else if (S_ISREG(ent_stat.st_mode)) {
-      res->type = ENTITY_FILE;
-    }
-    children = (struct FileTreeEntity **)xrealloc(children, ++count * sizeof(struct FileTreeEntity *));
-    children[count - 1] = res;
+struct FileTreeEntity *init_file_tree_ent(const char *path) {
+  struct FileTreeEntity *ent = (struct FileTreeEntity *)xcalloc(1, sizeof(struct FileTreeEntity));
+  struct stat ent_stat;
+  stat(path, &ent_stat);
+  size_t path_len = strlen(path);
+  ent->path = (char *)xmalloc(path_len + 1);
+  ent->path[path_len] = '\0';
+  memcpy(ent->path, path, path_len);
+
+  if (S_ISREG(ent_stat.st_mode)) {
+    ent->type = ENTITY_FILE;
+    ent->as.file.is_readonly = false;
+    ent->as.file.size = ent_stat.st_size;
   }
-  return (struct FileTreeEntities){children, count};
+
+  else if (S_ISDIR(ent_stat.st_mode)) {
+    DIR *dir = opendir(path);
+    if (!dir) return NULL;
+    ent->type = ENTITY_DIRECTORY;
+    ent->as.dir.is_open = false;
+    struct dirent *child_ent;
+    struct FileTreeEntity **children = NULL;
+    size_t count = 0;
+    while ((child_ent = readdir(dir))) {
+      if (!strcmp(child_ent->d_name, ".") || !strcmp(child_ent->d_name, "..")) continue;
+      char child_path[MAX_STRING_BUFFER_SIZE];
+      size_t len = snprintf(child_path, sizeof(child_path) - 1, "%s/%s", path, child_ent->d_name);
+      child_path[len] = '\0';
+      struct FileTreeEntity *child = init_file_tree_ent(child_path);
+      children = (struct FileTreeEntity **)xrealloc(children, ++count * sizeof(struct FileTreeEntity *));
+      children[count - 1] = child;
+    }
+    ent->as.dir.len = count;
+    ent->as.dir.children = children;
+  }
+
+  return ent;
+}
+
+void init_file_tree(struct Context *ctx) {
+  char cwd[MAX_STRING_BUFFER_SIZE];
+  if (!get_curr_dir(cwd, sizeof(cwd))) return;
+  memcpy(ctx->file_tree.root_dir, cwd, strlen(cwd));
+  ctx->file_tree.root = init_file_tree_ent(cwd);
 }

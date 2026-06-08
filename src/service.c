@@ -14,18 +14,12 @@
 #include "service.h"
 #include "terminal.h"
 
-// void init_file_tree(struct Context *ctx) {
-//   char cwd[MAX_STRING_BUFFER_SIZE];
-//   if (!get_curr_dir(cwd, sizeof(cwd))) return;
-//   strncpy(ctx->file_tree.work_dir, cwd, strlen(cwd));
-//   ctx->file_tree.children = init_file_tree_folder(cwd);
-// }
-
 void init_context(struct Context *ctx) {
   gettimeofday(&ctx->frame.prev_time, NULL);
   struct UI ui = {
       .is_line_numbers = true,
       .is_relative_line_numbers = false,
+      .is_file_tree = false,
       .is_statusline = true,
       .is_tabmenu = true,
       .is_code_highlighting = true,
@@ -132,20 +126,19 @@ void free_resources(struct Context *ctx) {
   free_mappings(ctx->mapping.head);
 }
 
-void update_doc_offset(struct Document *doc, struct UI ui, struct Vec2 size) {
-  int width = get_buffer_width(ui, size, doc->len);
-  int height = get_buffer_height(ui, size);
+void update_doc_offset(struct Document *doc, struct UI ui, struct Vec2 term_size) {
+  struct Vec2 size = get_buf_size(ui, term_size, doc->len);
 
   if (doc->pos.x < doc->offset.x) {
     doc->offset.x = doc->pos.x;
-  } else if (doc->pos.x >= doc->offset.x + width) {
-    doc->offset.x = doc->pos.x - width + 1;
+  } else if (doc->pos.x >= doc->offset.x + size.x) {
+    doc->offset.x = doc->pos.x - size.x + 1;
   }
 
   if (doc->pos.y < doc->offset.y) {
     doc->offset.y = doc->pos.y;
-  } else if (doc->pos.y >= doc->offset.y + height) {
-    doc->offset.y = doc->pos.y - height + 1;
+  } else if (doc->pos.y >= doc->offset.y + size.y) {
+    doc->offset.y = doc->pos.y - size.y + 1;
   }
 }
 
