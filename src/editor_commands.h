@@ -17,6 +17,7 @@ struct Command {
   X(write_quit, "wq")                                                                                                                                          \
   X(write_all, "wa")
 
+void cmd_edit(struct Context *ctx, char *path);
 void handle_command(struct Context *ctx);
 
 #endif

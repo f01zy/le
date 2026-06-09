@@ -205,6 +205,7 @@ void cmd_toggle_file_tree(struct Context *ctx) {
 }
 
 // Other
+// TODO: запретить работу с документом во время просмотра дерева файлов
 void exec_mapping(struct Context *ctx) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
   struct MappingNode static_mapping;
@@ -263,7 +264,6 @@ void exec_mapping(struct Context *ctx) {
     cmd_line_end(ctx, count);
   }
 
-  init_tokens(doc);
   reset_curr_mapping(ctx);
 }
 

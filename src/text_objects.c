@@ -14,6 +14,7 @@ char get_brace_close(char open) {
   return '\0';
 }
 
+// TODO: рассмотреть крайний случай, когда курсор на границе, и добавить модификатор around
 struct Vec4 get_object_content_bounds(struct Document *doc, size_t count, char open, char close) {
   struct Vec3 left = doc->pos, right = doc->pos;
   size_t left_count = count, right_count = count;

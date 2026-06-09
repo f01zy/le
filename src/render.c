@@ -7,7 +7,6 @@
 #include "render.h"
 #include "selected.h"
 #include "terminal.h"
-#include "types.h"
 #include "ui.h"
 
 void render_line(struct Cell *buf, size_t len, int y) {

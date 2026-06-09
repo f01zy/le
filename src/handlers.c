@@ -5,6 +5,15 @@
 #include "service.h"
 
 void handle_normal_mode(struct Context *ctx, int ch) {
+  if (ch == KEY_ENTER && ctx->focus == EDITOR_FOCUS_TREE) {
+    struct FileTreeEntity *ent = ctx->file_tree.labels[ctx->file_tree.pos].ent;
+    if (ent->type == ENTITY_DIRECTORY) {
+      ent->as.dir.is_open = !ent->as.dir.is_open;
+    } else {
+      cmd_edit(ctx, ent->path);
+    }
+    return;
+  }
   if (ctx->mapping.len < sizeof(ctx->mapping.buf)) {
     ctx->mapping.buf[ctx->mapping.len++] = ch;
     ctx->mapping.buf[ctx->mapping.len] = '\0';
@@ -42,8 +51,6 @@ void handle_insert_mode(struct Context *ctx, int ch) {
     }
     break;
   }
-
-  init_tokens(doc);
 }
 
 void handle_command_mode(struct Context *ctx, char ch) {

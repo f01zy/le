@@ -70,6 +70,7 @@ int main(int argc, char **argv) {
         if (!is_sticky_motion(ch)) update_doc_max_x(doc);
         update_doc_offset(doc, ctx.ui, ctx.terminal.size);
       }
+      init_tokens(doc);
       render(&ctx);
     }
   }
