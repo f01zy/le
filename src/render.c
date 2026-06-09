@@ -7,6 +7,7 @@
 #include "render.h"
 #include "selected.h"
 #include "terminal.h"
+#include "types.h"
 #include "ui.h"
 
 void render_line(struct Cell *buf, size_t len, int y) {
@@ -34,25 +35,26 @@ void render_line(struct Cell *buf, size_t len, int y) {
 }
 
 void render_tabmenu(struct Context *ctx, struct Cell **frame) {
-  int col = ctx->terminal.size.x, row = ctx->terminal.size.y;
-  for (int i = 0; i < col; i++) {
-    frame[0][i] = CELL(' ');
+  struct Vec2 size = get_tabmenu_size(ctx->ui, ctx->terminal.size);
+  struct Vec2 offset = get_tabmenu_offset(ctx->ui, ctx->terminal.size);
+  for (int i = 0; i < size.x; i++) {
+    frame[offset.y][i + offset.x] = CELL(' ');
   }
   int max_len = 0;
   for (int i = 0; i < ctx->len; i++) {
     const char *filename = get_file_name(ctx->docs[i]->path);
     max_len = MAX(max_len, strlen(filename));
   }
-  int max_docs_count = MAX(col / max_len, 1);
-  int offset = MAX((int)ctx->curr_doc - max_docs_count + 1, 0);
-  for (int i = offset; i < offset + max_docs_count && i < ctx->len; i++) {
+  int max_docs_count = MAX(size.x / max_len, 1);
+  int doc_offset = MAX((int)ctx->curr_doc - max_docs_count + 1, 0);
+  for (int i = doc_offset; i < doc_offset + max_docs_count && i < ctx->len; i++) {
     enum RenderMode mode = i == ctx->curr_doc ? RENDER_DEFAULT : RENDER_DIM;
     const char *filename = get_file_name(ctx->docs[i]->path);
     size_t len = strlen(filename);
     int margin = (max_len - len) / 2;
-    int tab_start_x = (i - offset) * max_len;
+    int tab_start_x = (i - doc_offset) * max_len;
     for (int j = 0; j < len; j++) {
-      frame[0][tab_start_x + j + margin] = CELL_MODE(filename[j], mode);
+      frame[offset.y][tab_start_x + j + margin + offset.x] = CELL_MODE(filename[j], mode);
     }
   }
 }
@@ -108,69 +110,48 @@ void render_statusline(struct Context *ctx, struct Cell **frame) {
   }
 
   for (int i = 0; i < col; i++) {
-    frame[y][i] = i < len ? (struct Cell){buf[i], RENDER_DEFAULT, fg, BACKGROUND_BLACK} : CELL(' ');
+    frame[y][i] = i < len ? (struct Cell){buf[i], RENDER_DEFAULT, fg, BACKGROUND_DEFAULT} : CELL(' ');
   }
 }
 
 void render_file_tree(struct Context *ctx, struct Cell **frame) {
   struct Vec2 size = get_file_tree_size(ctx->ui, ctx->terminal.size);
-  struct Vec2 offset = get_file_tree_offset(ctx->ui);
-  struct FileTreeEntity *root = ctx->file_tree.root;
+  struct Vec2 offset = get_file_tree_offset(ctx->ui, ctx->terminal.size);
   for (int i = 0; i < size.y; i++) {
-    if (i >= root->as.dir.len) {
+    int y = i + ctx->file_tree.offset;
+    if (y >= ctx->file_tree.len) {
       for (int j = 0; j < size.x; j++) {
         frame[i + offset.y][j + offset.x] = CELL(' ');
       }
       continue;
     }
-    struct FileTreeEntity *ent = root->as.dir.children[i];
+    size_t level = ctx->file_tree.labels[y].level;
+    struct FileTreeEntity *ent = ctx->file_tree.labels[y].ent;
     const char *ent_name = get_file_name(ent->path);
-    size_t path_len = strlen(ent_name);
-    for (int j = 0; j < path_len && j < size.x; j++) {
-      frame[i + offset.y][j + offset.x] = CELL(ent_name[j]);
+    size_t name_len = strlen(ent_name);
+    enum BackgroundColor bg = ctx->file_tree.pos == y ? BACKGROUND_GRAY : BACKGROUND_DEFAULT;
+    for (int j = 0; j < level; j++) {
+      frame[i + offset.y][j + offset.x] = (struct Cell){' ', RENDER_DEFAULT, FOREGROUND_WHITE, bg};
     }
-    for (int j = path_len; j < size.x; j++) {
-      frame[i + offset.y][j + offset.x] = CELL(' ');
+    for (int j = level; j < name_len + level && j < size.x; j++) {
+      frame[i + offset.y][j + offset.x] = (struct Cell){ent_name[j - level], RENDER_DEFAULT, FOREGROUND_WHITE, bg};
+    }
+    for (int j = level + name_len; j < size.x; j++) {
+      frame[i + offset.y][j + offset.x] = (struct Cell){' ', RENDER_DEFAULT, FOREGROUND_WHITE, bg};
     }
   }
 }
 
-void render_buf(struct Context *ctx, struct Cell **frame) {
+void render_buf_highlights(struct Context *ctx, struct Cell **frame) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
   struct Vec2 size = get_buf_size(ctx->ui, ctx->terminal.size, doc->len);
   struct Vec2 offset = get_buf_offset(ctx->ui, ctx->terminal.size, doc->len);
-
   for (int i = 0; i < size.y; i++) {
     int y = i + doc->offset.y;
-    if (y >= doc->len) {
-      for (int j = 0; j < size.x; j++) {
-        frame[i + offset.y][j + offset.x] = CELL(' ');
-      }
-      continue;
-    }
-
-    struct Line *line = doc->buf[y];
-    for (int j = 0; j < size.x; j++) {
-      int x = doc->offset.x + j;
-      char ch = x < line->len ? line->buf[x] : ' ';
-
-      enum BackgroundColor bg = BACKGROUND_BLACK;
-      if (ctx->mode == EDITOR_MODE_VISUAL) {
-        struct Vec4 c = {doc->pos.x, doc->pos.y, doc->selected.x, doc->selected.y};
-        get_selected_coordinates(&c);
-        if ((y == c.ay && c.ay == c.by && x >= c.ax && x <= c.bx) ||
-            (c.ay != c.by && ((y > c.ay && y < c.by) || (y == c.ay && x >= c.ax) || (y == c.by && x <= c.bx)))) {
-          bg = BACKGROUND_GRAY;
-        }
-      }
-
-      frame[i + offset.y][j + offset.x] = (struct Cell){ch, RENDER_DEFAULT, FOREGROUND_WHITE, bg};
-    }
-
-    if (!(ctx->ui.is_code_highlighting && doc->tokens.buf)) continue;
-    struct TokenLine *tokens_line = doc->tokens.buf[y];
-    for (int j = 0; j < tokens_line->len; j++) {
-      struct Token *token = &tokens_line->buf[j];
+    if (y >= doc->len) break;
+    struct TokenLine *line = doc->tokens.buf[y];
+    for (int j = 0; j < line->len; j++) {
+      struct Token *token = &line->buf[j];
       enum ForegroundColor fg = get_token_foreground(token->group);
       for (int k = token->start; k < token->start + token->len; k++) {
         int x = k - doc->offset.x;
@@ -179,6 +160,34 @@ void render_buf(struct Context *ctx, struct Cell **frame) {
       }
     }
   }
+}
+
+void render_buf(struct Context *ctx, struct Cell **frame) {
+  struct Document *doc = ctx->docs[ctx->curr_doc];
+  struct Vec2 size = get_buf_size(ctx->ui, ctx->terminal.size, doc->len);
+  struct Vec2 offset = get_buf_offset(ctx->ui, ctx->terminal.size, doc->len);
+  for (int i = 0; i < size.y; i++) {
+    int y = i + doc->offset.y;
+    if (y >= doc->len) {
+      for (int j = 0; j < size.x; j++) {
+        frame[i + offset.y][j + offset.x] = CELL(' ');
+      }
+      continue;
+    }
+    struct Line *line = doc->buf[y];
+    for (int j = 0; j < size.x; j++) {
+      int x = doc->offset.x + j;
+      char ch = x < line->len ? line->buf[x] : ' ';
+      enum BackgroundColor bg = BACKGROUND_DEFAULT;
+      if (ctx->mode == EDITOR_MODE_VISUAL) {
+        struct Vec4 c = {doc->pos.x, doc->pos.y, doc->selected.x, doc->selected.y};
+        get_selected_coordinates(&c);
+        if (is_within_range(c, (struct Vec2){x, y})) bg = BACKGROUND_GRAY;
+      }
+      frame[i + offset.y][j + offset.x] = (struct Cell){ch, RENDER_DEFAULT, FOREGROUND_WHITE, bg};
+    }
+  }
+  if (ctx->ui.is_code_highlighting && doc->tokens.buf) render_buf_highlights(ctx, frame);
 }
 
 void render(struct Context *ctx) {
@@ -202,15 +211,17 @@ void render(struct Context *ctx) {
     }
   }
   ANSI_SHOW_CURSOR;
-  ctx->frame.prev = curr_frame;
-  ctx->frame.curr = prev_frame;
+  swap_frames(ctx);
 
   if (ctx->mode == EDITOR_MODE_COMMAND) {
     move_cursor_yx(row - 1, ctx->status.cmd.len + 1);
   } else if (ctx->mode == EDITOR_MODE_DIALOG) {
     move_cursor_yx(row - 1, strlen(ctx->status.dialog.buf));
-  } else {
+  } else if (ctx->focus == EDITOR_FOCUS_BUFFER) {
     struct Vec2 offset = get_buf_offset(ctx->ui, ctx->terminal.size, doc->len);
     move_cursor_yx(doc->pos.y - doc->offset.y + offset.y, doc->pos.x - doc->offset.x + offset.x);
+  } else if (ctx->focus == EDITOR_FOCUS_TREE) {
+    struct Vec2 offset = get_file_tree_offset(ctx->ui, ctx->terminal.size);
+    move_cursor_yx(ctx->file_tree.pos - ctx->file_tree.offset + offset.y, offset.x);
   }
 }

@@ -38,3 +38,9 @@ void get_selected_buffer(struct Document *doc, char *out, size_t max_size) {
 
   out[curr] = '\0';
 }
+
+bool is_within_range(struct Vec4 a, struct Vec2 b) {
+  if (b.y == a.ay && a.ay == a.by && b.x >= a.ax && b.x <= a.bx) return true;
+  if (a.ay != a.by && ((b.y > a.ay && b.y < a.by) || (b.y == a.ay && b.x >= a.ax) || (b.y == a.by && b.x <= a.bx))) return true;
+  return false;
+}

@@ -46,6 +46,11 @@ enum EditorMode {
   EDITOR_MODE_VISUAL,
 };
 
+enum EditorFocus {
+  EDITOR_FOCUS_BUFFER,
+  EDITOR_FOCUS_TREE,
+};
+
 struct Context;
 
 // File tree
@@ -66,6 +71,11 @@ struct FileTreeEntity {
       bool is_readonly;
     } file;
   } as;
+};
+
+struct FileTreeLabel {
+  struct FileTreeEntity *ent;
+  size_t level;
 };
 
 // Vectors
@@ -173,11 +183,15 @@ struct Context {
   struct StatusLine status;
   struct UI ui;
   enum EditorMode mode;
+  enum EditorFocus focus;
 
   struct {
-    size_t pos;
-    struct Vec2 offset;
     struct FileTreeEntity *root;
+    struct FileTreeLabel *labels;
+    size_t pos;
+    size_t offset;
+    size_t size;
+    size_t len;
     char root_dir[MAX_STRING_BUFFER_SIZE];
   } file_tree;
 

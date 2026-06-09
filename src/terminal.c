@@ -19,7 +19,12 @@ void set_cursor_style(enum CursorStyle type) {
 
 void set_render_mode(enum RenderMode mode, enum ForegroundColor fg, enum BackgroundColor bg) {
   char buf[MAX_BUFFER_SIZE];
-  size_t len = snprintf(buf, sizeof(buf), ANSI_RENDER_MODE, mode, fg, bg);
+  size_t len;
+  if (bg == BACKGROUND_DEFAULT) {
+    len = snprintf(buf, sizeof(buf), ANSI_RENDER_MODE ANSI_FOREGROUND ANSI_BACKGROUND_DEFAULT, mode, fg);
+  } else {
+    len = snprintf(buf, sizeof(buf), ANSI_RENDER_MODE ANSI_FOREGROUND ANSI_BACKGROUND, mode, fg, bg);
+  }
   write(STDOUT_FILENO, buf, len);
 }
 

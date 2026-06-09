@@ -12,5 +12,6 @@ struct Cell {
 };
 
 struct Cell **create_frame(struct Vec2 size);
+void swap_frames(struct Context *ctx);
 
 #endif

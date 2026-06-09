@@ -2,18 +2,18 @@
 
 struct Vec2 get_file_tree_size(struct UI ui, struct Vec2 term_size) {
   int width = ui.is_file_tree ? FILE_TREE_WIDTH : 0;
-  int height = term_size.y - get_tabmenu_height(ui) - get_statusline_height(ui);
+  int height = term_size.y - get_statusline_height(ui);
   return (struct Vec2){width, height};
 }
 
-struct Vec2 get_file_tree_offset(struct UI ui) {
+struct Vec2 get_file_tree_offset(struct UI ui, struct Vec2 term_size) {
   int offsetX = 0;
-  int offsetY = get_tabmenu_height(ui);
+  int offsetY = 0;
   return (struct Vec2){offsetX, offsetY};
 }
 
 struct Vec2 get_line_numbers_size(struct UI ui, struct Vec2 term_size, size_t doc_len) {
-  int height = term_size.y - get_tabmenu_height(ui) - get_statusline_height(ui);
+  int height = term_size.y - get_tabmenu_size(ui, term_size).y - get_statusline_height(ui);
   int width = 0;
   if (ui.is_line_numbers) {
     while (doc_len) {
@@ -27,29 +27,36 @@ struct Vec2 get_line_numbers_size(struct UI ui, struct Vec2 term_size, size_t do
 
 struct Vec2 get_line_numbers_offset(struct UI ui, struct Vec2 term_size, size_t doc_len) {
   int offsetX = get_file_tree_size(ui, term_size).x;
-  int offsetY = get_tabmenu_height(ui);
+  int offsetY = get_tabmenu_size(ui, term_size).y;
   return (struct Vec2){offsetX, offsetY};
 }
 
 struct Vec2 get_buf_size(struct UI ui, struct Vec2 term_size, size_t doc_len) {
   int width = term_size.x - get_file_tree_size(ui, term_size).x - get_line_numbers_size(ui, term_size, doc_len).x;
-  int height = term_size.y - get_tabmenu_height(ui) - get_statusline_height(ui);
+  int height = term_size.y - get_tabmenu_size(ui, term_size).y - get_statusline_height(ui);
   return (struct Vec2){width, height};
 }
 
 struct Vec2 get_buf_offset(struct UI ui, struct Vec2 term_size, size_t doc_len) {
   int offsetX = get_file_tree_size(ui, term_size).x + get_line_numbers_size(ui, term_size, doc_len).x;
-  int offsetY = get_tabmenu_height(ui);
+  int offsetY = get_tabmenu_size(ui, term_size).y;
+  return (struct Vec2){offsetX, offsetY};
+}
+
+struct Vec2 get_tabmenu_size(struct UI ui, struct Vec2 term_size) {
+  int width = term_size.x - get_file_tree_size(ui, term_size).x;
+  int height = ui.is_tabmenu;
+  return (struct Vec2){width, height};
+}
+
+struct Vec2 get_tabmenu_offset(struct UI ui, struct Vec2 term_size) {
+  int offsetX = get_file_tree_size(ui, term_size).x;
+  int offsetY = 0;
   return (struct Vec2){offsetX, offsetY};
 }
 
 int get_statusline_height(struct UI ui) {
   if (!ui.is_statusline) return 0;
-  return 1;
-}
-
-int get_tabmenu_height(struct UI ui) {
-  if (!ui.is_tabmenu) return 0;
   return 1;
 }
 

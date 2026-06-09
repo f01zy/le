@@ -8,3 +8,9 @@ struct Cell **create_frame(struct Vec2 size) {
   }
   return frame;
 }
+
+void swap_frames(struct Context *ctx) {
+  struct Cell **temp = ctx->frame.curr;
+  ctx->frame.curr = ctx->frame.prev;
+  ctx->frame.prev = temp;
+}

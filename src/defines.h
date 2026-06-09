@@ -13,6 +13,8 @@
 #define PATH_SEPARATOR '/'
 #endif
 
+#define MAPPING_DELAY                        200000
+#define RENDER_DELAY                         20
 #define ADDITIONAL_REALLOCATION              16
 #define MAX_BUFFER_SIZE                      8192
 #define MAX_STRING_BUFFER_SIZE               256
@@ -37,7 +39,10 @@
 #define ANSI_SHOW_CURSOR                     write(STDOUT_FILENO, "\x1b[?25h", 6)
 #define ANSI_MOVE_CURSOR_YX                  "\x1b[%d;%dH"
 #define ANSI_CURSOR_TYPE                     "\x1b[%d q"
-#define ANSI_RENDER_MODE                     "\x1b[%d;38;5;%d;48;5;%dm"
+#define ANSI_RENDER_MODE                     "\x1b[%dm"
+#define ANSI_FOREGROUND                      "\x1b[38;5;%dm"
+#define ANSI_BACKGROUND                      "\x1b[48;5;%dm"
+#define ANSI_BACKGROUND_DEFAULT              "\x1b[49m"
 
 #define MAPPING_LEFT                         'h'
 #define MAPPING_RIGHT                        'l'
@@ -68,7 +73,7 @@
 #define MAX(A, B)                            ((A) > (B) ? (A) : (B))
 #define IS_ALPHA(A)                          (isalpha((unsigned char)(A)) || (A) == '_')
 #define IS_ALPHA_NUMERIC(A)                  (isalpha((unsigned char)(A)) || (A) == '_' || isdigit(A))
-#define CELL(ch)                             ((struct Cell){(ch), RENDER_DEFAULT, FOREGROUND_WHITE, BACKGROUND_BLACK})
-#define CELL_MODE(ch, mode)                  ((struct Cell){(ch), (mode), FOREGROUND_WHITE, BACKGROUND_BLACK})
+#define CELL(ch)                             ((struct Cell){(ch), RENDER_DEFAULT, FOREGROUND_WHITE, BACKGROUND_DEFAULT})
+#define CELL_MODE(ch, mode)                  ((struct Cell){(ch), (mode), FOREGROUND_WHITE, BACKGROUND_DEFAULT})
 
 #endif

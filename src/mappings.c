@@ -18,7 +18,13 @@ static struct Mapping mappings_list[] = {
 };
 
 // Movement
-void cmd_up(struct Context *ctx, int count) {
+
+void tree_move_up(struct Context *ctx, int count) {
+  if (ctx->file_tree.pos < count) return;
+  ctx->file_tree.pos -= count;
+}
+
+void buffer_move_up(struct Context *ctx, int count) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
   if (doc->pos.y < count) return;
   doc->pos.y -= count;
@@ -29,7 +35,23 @@ void cmd_up(struct Context *ctx, int count) {
   doc->pos.x = MIN(doc->pos.z, MAX_LINE_X(doc->buf[doc->pos.y]->len));
 }
 
-void cmd_down(struct Context *ctx, int count) {
+void cmd_up(struct Context *ctx, int count) {
+  switch (ctx->focus) {
+  case EDITOR_FOCUS_BUFFER:
+    buffer_move_up(ctx, count);
+    break;
+  case EDITOR_FOCUS_TREE:
+    tree_move_up(ctx, count);
+    break;
+  }
+}
+
+void tree_move_down(struct Context *ctx, int count) {
+  if (ctx->file_tree.pos + count >= ctx->file_tree.len) return;
+  ctx->file_tree.pos += count;
+}
+
+void buffer_move_down(struct Context *ctx, int count) {
   struct Document *doc = ctx->docs[ctx->curr_doc];
   if (doc->pos.y + count >= doc->len) return;
   doc->pos.y += count;
@@ -38,6 +60,17 @@ void cmd_down(struct Context *ctx, int count) {
     return;
   }
   doc->pos.x = MIN(doc->pos.z, MAX_LINE_X(doc->buf[doc->pos.y]->len));
+}
+
+void cmd_down(struct Context *ctx, int count) {
+  switch (ctx->focus) {
+  case EDITOR_FOCUS_BUFFER:
+    buffer_move_down(ctx, count);
+    break;
+  case EDITOR_FOCUS_TREE:
+    tree_move_down(ctx, count);
+    break;
+  }
 }
 
 void cmd_left(struct Context *ctx, int count) {
@@ -165,7 +198,11 @@ void cmd_visual_mode(struct Context *ctx) {
 void cmd_toggle_line_numbers(struct Context *ctx) { ctx->ui.is_line_numbers = !ctx->ui.is_line_numbers; }
 void cmd_toggle_relative_line_numbers(struct Context *ctx) { ctx->ui.is_relative_line_numbers = !ctx->ui.is_relative_line_numbers; }
 void cmd_toggle_code_highlighting(struct Context *ctx) { ctx->ui.is_code_highlighting = !ctx->ui.is_code_highlighting; }
-void cmd_toggle_file_tree(struct Context *ctx) { ctx->ui.is_file_tree = !ctx->ui.is_file_tree; }
+
+void cmd_toggle_file_tree(struct Context *ctx) {
+  ctx->ui.is_file_tree = !ctx->ui.is_file_tree;
+  ctx->focus = ctx->focus == EDITOR_FOCUS_TREE ? EDITOR_FOCUS_BUFFER : EDITOR_FOCUS_TREE;
+}
 
 // Other
 void exec_mapping(struct Context *ctx) {

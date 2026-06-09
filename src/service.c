@@ -1,3 +1,4 @@
+#include "ui.h"
 #include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,6 +10,7 @@
 #include <sys/ioctl.h>
 #endif
 
+#include "file_tree.h"
 #include "frame.h"
 #include "lexer.h"
 #include "service.h"
@@ -103,6 +105,7 @@ void free_mappings(struct MappingNode *node) {
   free(node);
 }
 
+// Почистить все, что забыл
 void free_resources(struct Context *ctx) {
   struct Cell **prev_frame = ctx->frame.prev, **curr_frame = ctx->frame.curr;
   for (int i = 0; i < ctx->len; i++) {
@@ -124,6 +127,7 @@ void free_resources(struct Context *ctx) {
   free(prev_frame);
   free(curr_frame);
   free_mappings(ctx->mapping.head);
+  free_file_tree(ctx->file_tree.root);
 }
 
 void update_doc_offset(struct Document *doc, struct UI ui, struct Vec2 term_size) {
@@ -139,6 +143,16 @@ void update_doc_offset(struct Document *doc, struct UI ui, struct Vec2 term_size
     doc->offset.y = doc->pos.y;
   } else if (doc->pos.y >= doc->offset.y + size.y) {
     doc->offset.y = doc->pos.y - size.y + 1;
+  }
+}
+
+void update_tree_offset(struct Context *ctx) {
+  struct Vec2 size = get_file_tree_size(ctx->ui, ctx->terminal.size);
+
+  if (ctx->file_tree.pos < ctx->file_tree.offset) {
+    ctx->file_tree.offset = ctx->file_tree.pos;
+  } else if (ctx->file_tree.pos >= ctx->file_tree.offset + size.y) {
+    ctx->file_tree.offset = ctx->file_tree.pos - size.y + 1;
   }
 }
 
